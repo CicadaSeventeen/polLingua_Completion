@@ -10,8 +10,11 @@
 
 ## 使用方法
 1、将release中的压缩包放在你希望的位置
+
 2、在zshrc中`source completer.zsh`
+
 3、在zshrc中设定补全规则为诸如
+
 ```
 zstyle ':completion:*' completer _commands _polLingua_smart _complete _correct _approximate _list
 ```
@@ -21,7 +24,7 @@ zstyle ':completion:*' completer _commands _polLingua_smart _complete _correct _
 
 ## Daemon(turbo)模式
 普通模式对cpu要求较大，如果你觉得卡顿，可以使用Daemon模式。在zshrc中`source daemon.zsh`即可解决。
-##### NOTE:
+#### NOTE:
 deamon模式采用了Linux的prctl，在非Linux系统如macos或BSD仍然应当可用，但可能无法很优雅地正常关闭。若出现驻留的残余daemon，应当没有实质影响，但是会很丑陋
 
 ## 配置方法：环境变量，注意需要`export`
