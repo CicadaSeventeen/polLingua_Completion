@@ -1,101 +1,120 @@
-# zsh-pinyin-completion-py
-## ZSH拼音补全，pypinyin实现
+# polLingua Completion
+## Multi-language Latinization Completion Supporting zsh and bash, Primarily Supporting Chinese Pinyin (Mandarin)
+Formerly known as `zsh-pinyin-completion-py`, see: https://github.com/CicadaSeventeen/zsh-pinyin-completion-p
 
-## 特色：
-支持部分其他非ascii语言如俄语的拉丁化补全
+## Features:
+1. Supports Latinization completion for some other non-ASCII languages like Russian.
+2. Highly customizable configuration and extensions.
+3. Written purely in a scripting language, making deployment easy without compilation.
 
-可进行用户自定义配置
+## Changes:
+1. Experimental support for **bash** (ble.sh not supported for now) (Thanks to https://github.com/AOSC-Dev/bash-pinyin-completion-rs).
+2. Refactored part of the abstraction layer, basically clearing the obstacles for adding new language support.
+3. Rewrote some environment variable configurations.
 
-纯脚本语言写成，方便部署，无需编译
+## Usage:
+1. Place the compressed package from the release in your desired location.
+2. `source setup.zsh` or `source setup.sh`.
+3. For **zsh**, `setup.zsh` is just a reference; customizing the configuration file according to personal needs is recommended.
 
-## 使用方法
-1、将release中的压缩包放在你希望的位置
+## I Need Support!
+1. Is it possible to support **fish**?
+2. Better **bash** completion generation scripts.
+3. Others.
 
-2、在zshrc中`source completer.zsh`
+## zsh completer
+It is recommended to use the `_polLingua_smart` completer.
 
-3、在zshrc中设定补全规则为诸如
+Other completers (generally not recommended):
 
+ `_polLingua_startswith`
+
+ `_polLingua_equal`
+
+ `_polLingua_file_startswith`
+
+ `_polLingua_file_equal`
+
+ `_polLingua_dir_startswith`
+
+ `_polLingua_dir_equal`
+
+Recommended order:
 ```
 zstyle ':completion:*' completer _commands _polLingua_smart _complete _correct _approximate _list
 ```
-顺序请根据个人使用习惯进行调整。`_polLingua_smart`考虑了fallback到`_files`的情况，因此通常不推荐用`_files`
+`_polLingua_smart` considers falling back to `_files`, so using `_files` is generally not recommended.
 
-除了`_polLingua_smart`之外还有一些其他completer可用，但暂不建议一般用户使用，如有需要请查看`completer.zsh`。注意部分completer还在开发中，无法使用；另一些是为内部调用或测试准备的，一般不适合直接使用。
+## Daemon (turbo) Mode
+The normal mode is quite demanding on the CPU; daemon mode provides acceleration and is enabled by default.
 
-## Daemon(turbo)模式
-普通模式对cpu要求较大，如果你觉得卡顿，可以使用Daemon模式。在zshrc中`source daemon.zsh`即可解决。
-#### NOTE:
-deamon模式采用了Linux的prctl，在非Linux系统如macos或BSD仍然应当可用，但可能无法很优雅地正常关闭。若出现驻留的残余daemon，应当没有实质影响，但是会很丑陋
+The daemon mode primarily utilizes Linux's `prctl`. It should still be available on non-Linux systems like macOS or BSD, but shutting it down gracefully might not be possible. If residual daemons remain, they should have no substantial impact, although they might look unsightly.
 
-## 配置方法：环境变量，注意需要`export`
-#### `COMPLETION_TYPE`
-进行补全的文字类型，目前支持chinese和unicode
+## Configuration Method: Environment Variables (Note: Requires `export`)
+#### `COMPLETION_CONVERTER_LIST`
+A list of enabled string translation/conversion (converter) mechanisms. This is rather complex; non-advanced users are advised not to edit it.
 
-#### `COMPLETION_CONVERTER_PINYIN`
-##### 拼音的转换规则：
+Default value is:
+`{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{filter_no_hanzi,unidecode}:{filter_no_hanzi:anyascii}:identity`
 
-`full`：全拼（小写）
+Where:
 
-`Full`：全拼（首字母大写）
+**`:`** acts like the colon separator in the environment variable PATH, separating parallel, distinct string converter groups.
 
-`FUll`：全拼（声母大写）
+**`,`** connects multiple converters that take effect sequentially within the same converter group.
 
-`FULL`：全拼（大写）
+**`{}`** wraps the converters in the same group; it can be omitted.
 
-`first_letter`：首字母（小写）
+ The existence of multiple repeating groups is to correspond to the associated parameter list.
 
-`FIRST_LETTER`：首字母（大写）
+##### Currently Supported Converters:
 
-`initials`：声母（小写）
+ **Unicode General**: `unidecode`, `anyascii`
 
-`Initials`：声母（首字母大写）
+ **Chinese Pinyin**: `pypinyin`, `pypinyin_filtered`
 
-`INITIALS`：声母（大写）
+ **Filter**: `filter_include_hanzi`, `filter_all_hanzi`, `filter_no_hanzi`, `filter_include_unicode`, `filter_no_unicode`, `filter_all_ascii`
 
-##### 默认为`full:Full:FIRST_LETTER:first_letter`
+ **Basic**: `simplify`, `remove`, `first_letter`
 
-#### `COMPLETION_PINYIN_HETERONYM`
-是否对中文启用多音字支持。根据启用的强度区别选项包括：`off`、`auto`、`on`、`all`。默认为`auto`
+ **Case**: `upper`, `lower`, `capitalize`, `capitalize_title`
 
-#### `COMPLETION_CONVERTER_UNICODE`
-##### 通用Unicode的转换规则：
+ **Chinese Initial Case**: `initials_capitalize`, `initials_capitalize_title`
 
-`none`：不处理
+#### `COMPLETION_CONVERTER_ARGUMENT_LIST`
+The parameter list corresponding to the converter groups. This is quite complex; non-advanced users are advised not to edit it.
 
-`FuLl`：全文拉丁化
+Default value is:
+` {style=normal#filter=capitalize,none}:{style=first_letter#filter=capitalize,none}:{style=initials#filter=initials_capitalize,none}:{style=normal,none}:{style=first_letter,none}:{style=initials,none}:{none,none}:{none,none}:none`
 
-`full`：全文拉丁化（小写）
+Where:
 
-`Full`：全文拉丁化（首字母大写）
+**`#`** connects different parameters taking effect on the same converter.
 
-`FULL`：全文拉丁化（大写）
+Most converters have no parameters; fill in `none`.
 
-`First_Letter`：首字母拉丁化
+##### `pypinyin` Parameters:
 
-`first_letter`：首字母拉丁化（小写）
+**`style`**: The type of Latin string output. Supports `normal`, `first_letter`, and `initials`.
 
-`FIRST_LETTER`：首字母拉丁化（大写）
+**`heteronym`**: Whether to enable support for polyphones (multiple pronunciations). Default is `auto`; other options are `on`, `off`, `all`.
 
-##### 默认为`FuLl`
+**`strict`**: Strict mode, usually not required to be enabled.
 
-#### `COMPLETION_UNICODE_LIB`
+##### `pypinyin_filtered` Parameters:
+Basically the same as above, but supports the `filter` parameter. It supports enabling a filter-type converter that only acts on Chinese pinyin, used to handle filenames mixed with Chinese characters and Latin letters.
 
-通用Unicode的拉丁化库，支持`unidecode`和`anyascii`，选择`both`则全部开启。默认为`both`
+#### `COMPLETION_FILENAME_MATCH_MODE`
+Whether to support partial completion. Defaults to `startswith`; can be set to `equal`.
 
 #### `COMPLETION_CASE_INSENSITIVE`
+Whether completion is case-insensitive. Setting it to `yes` performs case-insensitive fuzzy matching for all input. Defaults to `no`.
 
-是否大小写不敏感。设置为`yes`则对一切输入进行大小写模糊匹配。默认为`no`
+#### `COMPLETION_FILE_TYPE`
+Matches directories or non-directory files. Defaults to `dir:file`; you can select `dir` or `file` separately. Configuration modification is generally not recommended.
 
-### 还有一些其他变量，但更多是为了内部调试使用，不建议作为配置的一部分。
+#### `COMPLETION_SHOW_HIDDEN`
+Whether to match hidden files. Defaults to `yes`.
 
-## 其他项目
-### for Zsh
-https://github.com/adaptee/pinyin-completion 纯python实现，已经15年未维护
-
-https://github.com/petronny/pinyin-completion adaptee的程序的fork和重写，依赖cpp-pinyin库，需要c和cpp编译环境（本人编译成功但运行失败）
-### for Bash
-https://github.com/AOSC-Dev/bash-pinyin-completion-rs 由AOSC维护，rust写成
-
-https://github.com/emptyhua/bash-pinyin-completion c语言实现，已经5年未维护
-
-https://github.com/adaptee/pinyin-completion 纯python实现，已经15年未维护
+#### `COMPLETION_STRING_QUOTE_MODE`
+Internal variable, usually does not require configuration.
