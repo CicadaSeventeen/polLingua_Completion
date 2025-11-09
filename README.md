@@ -1,6 +1,6 @@
 # polLingua Completion
 ## Multi-language Latinization Completion Supporting zsh and bash, Primarily Supporting Chinese Pinyin (Mandarin)
-Formerly known as `zsh-pinyin-completion-py`, see: https://github.com/CicadaSeventeen/zsh-pinyin-completion-p
+Formerly known as `zsh-pinyin-completion-py`, see: https://github.com/CicadaSeventeen/zsh-pinyin-completion-py
 
 [中文版本](https://github.com/CicadaSeventeen/polLingua_Completion/blob/main/README_zh.md)
 
