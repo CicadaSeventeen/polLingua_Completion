@@ -2,6 +2,8 @@
 ## Multi-language Latinization Completion Supporting zsh and bash, Primarily Supporting Chinese Pinyin (Mandarin)
 Formerly known as `zsh-pinyin-completion-py`, see: https://github.com/CicadaSeventeen/zsh-pinyin-completion-p
 
+[中文版本](https://github.com/CicadaSeventeen/polLingua_Completion/blob/main/README_zh.md)
+
 ## Features:
 1. Supports Latinization completion for some other non-ASCII languages like Russian.
 2. Highly customizable configuration and extensions.
