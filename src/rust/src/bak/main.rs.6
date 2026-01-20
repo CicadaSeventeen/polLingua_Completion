@@ -1,0 +1,62 @@
+use serde::Deserialize;
+use serde::Serialize;
+use serde_aux::prelude::*;
+use std::collections::HashMap;
+
+// 1. 定义不同函数对应的参数结构
+#[derive(Debug, Deserialize)]
+struct AffixArgs {
+    prefix: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct OtherArgs {
+    val: i32,
+}
+
+// 2. 定义逻辑绑定的枚举
+// 使用 tag = "func" 和 content = "args" 将两者在逻辑上锁定
+#[derive(Debug, Deserialize)]
+#[serde(tag = "func", content = "args", rename_all = "lowercase")]
+enum StrSolveFunc {
+    Affix(AffixArgs),
+    Other(OtherArgs),
+}
+
+// 3. 定义主结构体，合并通用字段和逻辑变体
+#[derive(Debug, Deserialize)]
+struct ConfigNode {
+    // 通用字段：无论 func 是什么，这两个字段都存在
+    ret: bool,
+    children: Vec<ConfigNode>,
+    // 逻辑字段：通过 flatten 将 FuncLogic 里的 func 和 args 平铺到这个层级
+    #[serde(flatten)]
+    logic: StrSolveFunc,
+}
+
+fn main() {
+    let json = r#"
+    {
+        "func": "affix",
+        "args": {
+            "prefix": "new_"
+        },
+        "ret": true,
+        "children": []
+    }"#;
+
+    let node: ConfigNode = serde_json::from_str(json).expect("解析失败");
+
+    // 验证结果
+    println!("通用字段 - ret: {}, children数量: {}", node.ret, node.children.len());
+
+    // 使用时，通过 match 拿到强绑定的所有权
+    match node.logic {
+        FuncLogic::Affix(args) => {
+            println!("执行 Affix 逻辑，前缀是: {}", args.prefix);
+        }
+        FuncLogic::Other(args) => {
+            println!("执行 Other 逻辑，数值是: {}", args.val);
+        }
+    }
+}

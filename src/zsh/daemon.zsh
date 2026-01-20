@@ -7,4 +7,16 @@ if [[ `uname` == (#i)'Linux'* ]];then
 else
     python3 $_polLingua_python_path/python/daemon.py &!;_pid_polLingua_daemon=$!
 fi
-[[ `uname` == (#i)'Linux'* ]] ||  trap "kill $_pid_polLingua_daemon;wait $_pid_polLingua_daemon" EXIT
+
+_cleanup() {
+	sleep 0.2
+	( ps -p $_pid_polLingua_daemon ) && {
+		kill $_pid_polLingua_daemon
+	}
+	sleep 0.2
+	( ps -p $_pid_polLingua_daemon ) && {
+		kill -9  $_pid_polLingua_daemon
+	}
+}
+
+trap _cleanup EXIT

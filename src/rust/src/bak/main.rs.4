@@ -1,0 +1,70 @@
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Ecosystem { Sea, Land }
+
+// --- 子结构体定义 ---
+#[derive(Debug, Deserialize)]
+struct Animal {
+    name: String,
+    taxonomy: String,
+    ecosystem: Ecosystem,
+}
+
+#[derive(Debug, Deserialize)]
+struct Foo {
+    foo: String,
+}
+
+// --- 核心重构：将平行结构合二为一 ---
+#[derive(Debug, Deserialize)]
+#[serde(tag = "types", content = "args", rename_all = "lowercase")]
+enum ConfigItem {
+    // 此时，JSON 中的 "types": "animal" 会匹配到这个变体
+    // 而 "args": { ... } 会被解析进 Animal 结构体
+    Animal(Animal),
+    Foobar(Foo),
+}
+
+fn main() {
+    // 关键修改 2: 修正 JSON 语法错误
+    let json = r#"[
+        {
+            "types": "foobar",
+            "args": {
+                "foo": "bar"
+            }
+        },
+        {
+            "types": "animal",
+            "args": {
+                "name": "dog",
+                "taxonomy": "mammal",
+                "ecosystem": "land"
+            }
+        },
+        {
+            "types": "animal",
+            "args": {
+                "name": "dolphin",
+                "taxonomy": "mammal",
+                "ecosystem": "sea"
+            }
+        }
+    ]"#;
+
+    // 解析
+    let config: Vec<ConfigItem> = serde_json::from_str(json).unwrap();
+
+    for item in config {
+        match item {
+            ConfigItem::Animal(a) => {
+                println!("发现一只动物: {}, 属于{}, 来自 {:?}", a.name, a.taxonomy, a.ecosystem);
+            }
+            ConfigItem::Foobar(f) => {
+                println!("Foobar 内容: {}", f.foo);
+            }
+        }
+    }
+}

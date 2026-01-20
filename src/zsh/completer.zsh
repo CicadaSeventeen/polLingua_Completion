@@ -1,170 +1,54 @@
-zmodload zsh/parameter
-setopt extended_glob
-local _script_path=$(readlink -f ${${(%):-%x}:h})
-local _polLingua_python_path=$(dirname $_script_path)'/python'
-local _polLingua_commands="PYTHONPYCACHEPREFIX=$XDG_RUNTIME_DIR python3 ${_polLingua_python_path}/main.py auto"
-local _polLingua_turbo_commands="PYTHONPYCACHEPREFIX=$XDG_RUNTIME_DIR python3 ${_polLingua_python_path}/zsh_compadd.py auto"
-[ -z ${COMPLETION_CMD_DIR_ONLY} ] && { export COMPLETION_CMD_DIR_ONLY=cd; }
-#COMPLETION_CMD_FILE_ONLY=""
+#autoload
 
+# 这是一个 Completer，应该在 .zshrc 中配置:
+# zstyle ':completion:*' completers _polingua _complete _ignored
 
-_polLingua_startswith() {
-    [[ _matcher_num -gt 2 ]] && return 1
-    COMPLETION_FILENAME_MATCH_MODE=startswith _polLingua_core $@
-}
+#local _polLingua_script_path=${${(%):-%x}:h}
+# 假设 python 脚本在 ../python/main.py
+local _polLingua_cmd=(rust_test)
+zstyle -e ':pollingua-completion:settings'  enable-internal-completers '[[ -z $reply ]] && reply=(_list)'
 
-_polLingua_equal() {
-    [[ _matcher_num -gt 2 ]] && return 1
-    COMPLETION_FILENAME_MATCH_MODE=equal _polLingua_core $@
-}
+_polingua() {
+    [[ _matcher_num -gt 1 ]] && return 1
 
-_polLingua_file_startswith() {
-    export COMPLETION_FILE_TYPE=file
-    [[ _matcher_num -gt 2 ]] && return 1
-    COMPLETION_FILENAME_MATCH_MODE=startswith _polLingua_core $@
-    unset COMPLETION_FILE_TYPE
-}
+	local ret=1
+	local -a expl
+	local -a matches
+	# 3. 核心魔法：处理路径前缀
+	# 如果当前词包含路径（如 foo/ba），_path_files 通常会处理它。
+	# 这里我们手动处理一部分，为了传给 Python 正确的上下文。
 
-_polLingua_file_equal() {
-    [[ _matcher_num -gt 2 ]] && return 1
-    export COMPLETION_FILE_TYPE=file
-    COMPLETION_FILENAME_MATCH_MODE=equal _polLingua_core $@
-    unset COMPLETION_FILE_TYPE
-}
+	local cur_word="$words[CURRENT]"
+	local dir_prefix="${cur_word:h}"
+	local base_name="${cur_word:t}"
 
-_polLingua_dir_startswith() {
-    [[ _matcher_num -gt 2 ]] && return 1
-    export COMPLETION_FILE_TYPE=dir
-    COMPLETION_FILENAME_MATCH_MODE=startswith _polLingua_core $@
-    unset COMPLETION_FILE_TYPE
-}
+	# 如果没有路径分隔符，dirname 是 . (或者当前词就是 .)
+	if [[ "$cur_word" != */* ]]; then
+		dir_prefix="."
+		base_name="$cur_word"
+	elif [[ "$cur_word" == */ ]]; then
+		# 输入是 "src/" 的情况
+		dir_prefix="${cur_word%/}"
+		base_name=""
+	fi
 
-_polLingua_dir_equal() {
-    [[ _matcher_num -gt 2 ]] && return 1
-    export COMPLETION_FILE_TYPE=dir
-    COMPLETION_FILENAME_MATCH_MODE=equal _polLingua_core $@
-    unset COMPLETION_FILE_TYPE
-}
+	# 处理 ~user 或 ~/ 扩展
+	local expand_dir=$dir_prefix
+	if [[ "$dir_prefix" == \~* ]]; then
+		eval "expand_dir=$dir_prefix"
+	fi
 
-_polLingua_smart(){
-    [[ _matcher_num -gt 2 ]] && return 1
-    if [[ -n $words[1] && ":$COMPLETION_CMD_DIR_ONLY:" == *":$words[1]:"* ]]; then
-            _polLingua_dir_startswith $@
-    elif [[ -n $words[1] && ":$COMPLETION_CMD_FILE_ONLY:" == *":$words[1]:"* ]];then
-            _polLingua_file_startswith $@
-    else
-        _polLingua_startswith $@
-    fi
-}
-
-_polLingua_core_legacy(){
-    local _last_word=$(
-    (
-        IFS=$'\ \t\n\0'
-        eval "set -- $words[CURRENT]"
-        printf %q ${argv[-1]}
-    ))
-    compstate[pattern_match]='*'
-    if [[ $_last_word == '' ]];then
-        if [[ $COMPLETION_FILE_TYPE == 'file' ]];then
-            _files -g '*(-.)' $@
-        elif [[ $COMPLETION_FILE_TYPE == 'dir' ]];then
-            _files -/ $@
-        else
-            _files $@
-        fi
-    else
-        if [[ $_last_word == */ ]];then
-            local _tmp_dirname=${_last_word%/}
-        else
-            local _tmp_dirname=$(dirname $_last_word)
-            if [[ $words[CURRENT] == '~'* && $_tmp_dirname == "$HOME"* ]];then
-                _tmp_dirname='~'${_tmp_dirname#$HOME}
-            fi
-        fi
-        if [[ $_tmp_dirname == '.' ]];then
-            if [[ $_last_word == './'* ]];then
-                _tmp_dirname='./'
-            else
-                _tmp_dirname=''
-            fi
-        elif [[ $_tmp_dirname == '/' ]];then
-            :
-        else
-            _tmp_dirname=$_tmp_dirname'/'
-        fi
-        local -a corrections
-        corrections=( ${(f)${(s:\n:)"$(eval $_polLingua_commands $_last_word $PWD)"}})
-        #compadd -f -U -S '/' $corrections[@]
-#:<<EOF
-        for _word in ${corrections}
-        do
-            #local _tmp_showname=$(printf %q $_tmp_dirname$_word)
-           if [[ -d $(eval realpath $_tmp_dirname$_word) ]];then
-                if [[ $_tmp_dirname == '' ]];then
-                    compadd -f -U -S '/' -Q $@ $_word $_tmp_dirname
-                else
-                    compadd -f -U -S '/' -Q $@ -p $_tmp_dirname $_word
-                fi
-            else
-                if [[ $_tmp_dirname == '' ]];then
-                    compadd -f -U -S '' -Q $@ $_word $_tmp_dirname
-                else
-                    compadd -f -U -S '' -Q $@ -p $_tmp_dirname $_word
-                fi
-            fi
-        done
-#EOF
-    fi
-    return 1
-}
-
-_polLingua_core_turbo(){
-    [[ _matcher_num -gt 2 ]] && return 1
-    local _last_word=$(
-    (
-        IFS=$'\ \t\n\0'
-        eval "set -- $words[CURRENT]"
-        printf %q ${argv[-1]}
-    ))
-    compstate[pattern_match]='*'
-    if [[ $_last_word == '' ]];then
-        if [[ $COMPLETION_FILE_TYPE == 'file' ]];then
-            _files -g '*(-.)' $@
-        elif [[ $COMPLETION_FILE_TYPE == 'dir' ]];then
-            _files -/ $@
-        else
-            _files $@
-        fi
-    else
-        if [[ $_last_word == */ ]];then
-            local _tmp_dirname=${_last_word%/}
-        else
-            local _tmp_dirname=$(dirname $_last_word)
-            if [[ $words[CURRENT] == '~'* && $_tmp_dirname == "$HOME"* ]];then
-                _tmp_dirname='~'${_tmp_dirname#$HOME}
-            fi
-        fi
-        if [[ $_tmp_dirname == '.' ]];then
-            if [[ $_last_word == './'* ]];then
-                _tmp_dirname='./'
-            else
-                _tmp_dirname=''
-            fi
-        elif [[ $_tmp_dirname == '/' ]];then
-            :
-        else
-            _tmp_dirname=$_tmp_dirname'/'
-        fi
-        #echo $_polLingua_turbo_commands $_last_word $PWD
-        cmdline=$(eval $_polLingua_turbo_commands $_last_word $PWD)
-        #echo $cmdline
-        eval "$cmdline"
-    fi
-    return 1
-}
-
-_polLingua_core(){
-    _polLingua_core_turbo $@
-    return $?
+	# 4. 调用 Python 获取候选项
+	# 你的 Python 脚本应该接收: "当前正在输入的词(base_name)" "所在的目录(expand_dir)"
+	# 并返回：该目录下的文件名（不带路径前缀！）
+	# 优化：仅当目录存在时才调用
+	zstyle -a ':pollingua-completion:settings' enable-internal-completers enable_internal_completers
+	if [[ -d "$expand_dir" && -n "$base_name" ]]; then
+		compadd -f -U $(eval ${_polLingua_cmd} "${base_name}" "${expand_dir}")
+		for item in $enable_internal_completers
+		do
+			eval $item
+		done
+	fi
+	return ret
 }

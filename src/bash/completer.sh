@@ -1,323 +1,173 @@
 #!/usr/bin/env bash
 
-# Anthon Open Source Community
-# Pinyin Completion Hook for Bash-Completion
-_script_path=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
-_polLingua_python_path=$(dirname $_script_path)'/python'
-_polLingua_commands="PYTHONPYCACHEPREFIX=$XDG_RUNTIME_DIR python3 ${_polLingua_python_path}/main.py auto"
-[ -z ${COMPLETION_CMD_DIR_ONLY} ] && { export COMPLETION_CMD_DIR_ONLY=cd; }
-#COMPLETION_CMD_FILE_ONLY=""
+# ==============================================================================
+# 配置区域
+# ==============================================================================
+# 获取当前脚本所在目录 (兼容 symlink)
+#
+#_get_script_dir() {
+#    local source="${BASH_SOURCE[0]}"
+#    while [ -h "$source" ]; do
+#        local dir="$( cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd )"
+#        source="$(readlink "$source")"
+#        [[ $source != /* ]] && source="$dir/$source"
+#    done
+#    cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd
+#}
 
-# Detect bash-completion
-if ! declare -F _comp_compgen__call_builtin &>/dev/null; then
-    if [ -f $_script_path'/bash_completion_fallback.sh' ]
-    then
-        source $_script_path'/bash_completion_fallback.sh'
-    else
-        echo "No function _comp_compgen__call_builtin found. Please install bash-completion first."
-        sleep 2
-        exit 1
+#_SCRIPT_PATH=$(_get_script_dir)
+# 假设你的命令就在 path 中，或者你需要指定绝对路径
+# 建议使用数组来存储命令和参数，比字符串拼接更安全
+_POLLINGUA_COMPLETION_CMD_FALLBACK=rust_test
+_POLLINGUA_COMPLETION_CMD=( ${POLLINGUA_COMPLETION_CMD:-$_POLLINGUA_COMPLETION_CMD_FALLBACK} )
+#export COMPLETION_FILENAME_MATCH_MODE=startswith
+
+# ==============================================================================
+# Hook 核心逻辑
+# ==============================================================================
+
+# 检查是否已安装 bash-completion
+if ! declare -F _comp_compgen_filedir &>/dev/null; then
+    # 尝试加载系统的 bash_completion（可选，视环境而定）
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    fi
+
+    if ! declare -F _comp_compgen_filedir &>/dev/null; then
+        echo "[PolLingua] Error: _comp_compgen_filedir not found. Ensure bash-completion is loaded." >&2
+        return 1
     fi
 fi
-unset _script_path
 
-# Backup the original function
-eval "function __bak_comp_compgen__call_builtin() { $(declare -f _comp_compgen__call_builtin | tail -n +2) }"
+# 防止重复 Hook (幂等性检查)
+if [[ -n "${_POLLINGUA_HOOKED+x}" ]]; then
+    return 0
+fi
+export _POLLINGUA_HOOKED=1
 
-# Expand environment references ("$VAR", "${VAR}") inside completion prefixes
-__expand_env_refs() {
-    local input="$1"
-    # accumulate the expanded characters here
-    local result=""
-    local len=${#input}
-    local i=0
+# 定义 Hook 函数生成器
+# 参数 1: 原函数名
+# 参数 2: 备份函数名
+_inject_hook() {
+    local target_func="$1"
+    local backup_func="$2"
 
-    # Walk through every character
-    while (( i < len )); do
-        local ch="${input:i:1}"
-        # Preserve escaped characters verbatim
-        # "\$HOME" stays "$HOME"
-        if [[ "$ch" == "\\" ]]; then
-            ((i++))
-            if (( i < len )); then
-                result+="${input:i:1}"
-                ((i++))
-            fi
-            continue
-        fi
+    # 如果备份函数不存在，才进行备份，避免多次 source 导致无限递归
+    if ! declare -F "$backup_func" &>/dev/null; then
+        # 获取原函数代码，去掉第一行(函数定义)，保留函数体
+        local func_body
+        func_body=$(declare -f "$target_func" | tail -n +2)
 
-        # Handle environment references beginning with '$'
-        if [[ "$ch" == '$' ]]; then
-            ((i++))
-            if (( i >= len )); then
-                result+='$'
-                break
-            fi
+        # 定义备份函数
+        eval "function ${backup_func}() { $func_body }"
 
-            ch="${input:i:1}"
-            # Expand braces style
-            # "${VAR}"
-            if [[ "$ch" == '{' ]]; then
-                ((i++))
-                local start=$i
-                # Consume [A-Za-z0-9_] until we hit '}' or something else
-                while (( i < len )); do
-                    ch="${input:i:1}"
-                    if [[ "$ch" =~ [A-Za-z0-9_] ]]; then
-                        ((i++))
-                        continue
-                    fi
-                    break
-                done
-                local var_name="${input:start:i-start}"
-                if [[ -z "$var_name" ]]; then
-                    result+='$'
-                    result+='{'
-                    continue
-                fi
-                if (( i < len )) && [[ "${input:i:1}" == '}' ]]; then
-                    ((i++))
-                    # ${VAR} -> ${!VAR-} returns value or empty string.
-                    result+="${!var_name-}"
-                else
-                    result+='$'
-                    result+='{'
-                    i=$start
-                fi
-                continue
-            fi
-
-            if [[ "$ch" =~ [A-Za-z_] ]]; then
-                local start=$i
-                while (( i < len )) && [[ "${input:i:1}" =~ [A-Za-z0-9_] ]]; do
-                    ((i++))
-                done
-                local var_name="${input:start:i-start}"
-                result+="${!var_name-}"
-                continue
-            fi
-
-            # Handle positional parameters ($1)
-            # or a few common special vars
-            if [[ "$ch" =~ [0-9@*#?] ]]; then
-                local special_name="$ch"
-                ((i++))
-                result+="${!special_name-}"
-                continue
-            fi
-
-            # Any other symbol
-            result+='$'
-            continue
-        fi
-
-        # Normal characters are copied through.
-        result+="$ch"
-        ((i++))
-    done
-
-    printf '%s' "$result"
+        # 重写原函数
+        # 注意：这里我们使用 source 时的动态定义，而不是直接写死在文件里
+        eval "${target_func}() {
+            ${backup_func} \"\$@\"
+            _pinyin_completion \"\$@\"
+        }"
+    fi
 }
 
+# 执行 Hook
+_inject_hook "_comp_compgen_filedir"       "__bak_comp_compgen_filedir"
+_inject_hook "_comp_compgen_filedir_xspec" "__bak_comp_compgen_filedir_xspec"
+_inject_hook "_comp_complete_minimal"      "__bak_comp_complete_minimal"
+_inject_hook "_comp_expand_glob"           "__bak_comp_expand_glob"
 
-_comp_compgen__call_builtin() {
-    __bak_comp_compgen__call_builtin "$@"
-    local original_result=$?
+# ==============================================================================
+# 拼音补全逻辑
+# ==============================================================================
 
-    # Only add pinyin completion for file/directory completions
-    local is_file_completion=false
-    local compgen_args=("$@")
-
-    # Check for file completion indicators
-    for arg in "${compgen_args[@]}"; do
-        case "$arg" in
-            -f|-d|-A|file|directory)
-                is_file_completion=true
-                break
-                ;;
-        esac
-    done
-
-    # If this looks like file completion, add pinyin matches
-    if [[ "$is_file_completion" == true ]]; then
-        _add_completion "$@"
-    fi
-
-    return $original_result
-}
-
-# Function to add completion results
-_add_completion() {
-    # cur: bash-completion's working value for the current word.
-    local cur
-
-    eval "cur=${_cur}"
-    # origin_cur: the user's raw buffer text before any expansion
-    # including quotes or ~user prefixes. in other word, "snapshot".
-    local orig_cur="$cur"
-    # stripped_orig: an editable copy of orig_cur
-    # used to compute orig_dirpart without mutating the original text.
-    local stripped_orig="$orig_cur"
-    local orig_dirpart=""
-    if [[ "$stripped_orig" == "'"* || "$stripped_orig" == '"'* ]]; then
-        stripped_orig="${stripped_orig:1}"
-    fi
-    if [[ "$stripped_orig" == */* ]]; then
-        orig_dirpart="${stripped_orig%/*}"
-    fi
-    if [[ "$orig_dirpart" == "." && "${stripped_orig:0:2}" != "./" ]]; then
-        orig_dirpart=""
-    fi
-
-    # Check if we have the necessary variables
-    if [[ -z "${_cur-}" ]] || [[ -z "${_var-}" ]]; then
+_pinyin_completion() {
+    # 基础检查：是否有补全单词
+    if [ ${#COMP_WORDS[@]} -eq 0 ] || [ -z "${COMP_CWORD+x}" ]; then
         return
     fi
 
-    local var_name="$_var"
+    local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    # Skip empty
-    [[ -z "$cur" ]] && return
+    # 忽略空字符串，避免触发全量搜索
+    [ -z "$cur" ] && return
 
-    # perform bash-completion's normal expansions.
-    _expand || return 0
-
-    local dirpart basepart
-    if [[ "${cur:0:1}" == "'" || "${cur:0:1}" == "\"" ]]; then
-        dirpart="$(dirname -- "${cur:1}")"
-        basepart="$(basename -- "${cur:1}")"
-    else
-        dirpart="$(dirname -- "$cur")"
-        basepart="$(basename -- "$cur")"
+    # 检测 "~/" 开头
+    local home_start=false
+    if [[ "${cur:0:2}" == "~/" ]]; then
+        home_start=true
     fi
 
-    [[ "$dirpart" == "." && "${cur:0:2}" != "./" ]] && dirpart=""
+    # 准备调用外部命令的参数
+    #local cmd_mode="file"
+    local cmd_mode="all"
+    #local compgen_flag="-f"
+    # 检测是否只补全目录 (-d 参数)
+    # 注意：这里检测的是传入 _pinyin_completion 的第一个参数，通常是 _comp_compgen_filedir 传进来的
+    if [[ "${1-}" == -d ]]; then
+        cmd_mode="dir"
+       # compgen_flag="-d"
+    fi
 
-    # Expand environemnt variables
-    # dirpart_lookup: save the true path after expanded
-    # NOTE: in the end, the path prefix will be rollbacked to "snapshot".
-    local dirpart_lookup="$dirpart"
-    if [[ -n "$dirpart_lookup" && "$dirpart_lookup" == *'$'* ]]; then
-        local expanded_lookup
-        expanded_lookup="$(__expand_env_refs "$dirpart_lookup")"
-        if [[ -n "$expanded_lookup" ]]; then
-            dirpart_lookup="$expanded_lookup"
+    # 获取外部命令输出
+    local -a pinyin_matched=()
+
+    # !!! 安全修复：移除 eval，直接执行命令数组 !!!
+    # 使用 env 传递变量比 eval 更安全
+    if output=$(_POLINGUA_COMPLETION_FILETYPE="$cmd_mode" "${_POLLINGUA_COMPLETION_CMD[@]}" "$cur" "$PWD" 2>/dev/null); then
+        # 兼容性处理：readarray (mapfile) 在 Bash 4.0+ 可用
+        if [ -n "$output" ]; then
+            readarray -t pinyin_matched <<< "$output"
         fi
     fi
 
-    local savedPWD="$PWD"
-    local resolved_dir
-    local compgen_opts=(-f)
+    # 如果没有匹配结果，直接返回
+    if [ ${#pinyin_matched[@]} -eq 0 ]; then
+        return
+    fi
 
-    local is_dir_only=false
-    for arg in "$@"; do
-        if [[ "$arg" == "-d" ]]; then
-            is_dir_only=true
-            compgen_opts=(-d)
-            break
+    # 启用文件名处理选项（处理空格等转义）
+    compopt -o filenames 2>/dev/null
+
+    # ==========================================================================
+    # 结果合并与去重 (修复 "数组下标不正确" 的核心部分)
+    # ==========================================================================
+
+    # 将现有的 COMPREPLY 和新的匹配项合并
+    local -a combined=("${COMPREPLY[@]}" "${pinyin_matched[@]}")
+
+    # 清空 COMPREPLY 准备重写
+    COMPREPLY=()
+
+    declare -A seen
+    local item
+
+    for item in "${combined[@]}"; do
+        # 1. 必须非空检查
+        [[ -z "$item" ]] && continue
+
+        # 2. 检查关联数组中是否已存在 (使用 +exists 技巧)
+        if [[ -z "${seen["$item"]+exists}" ]]; then
+            seen["$item"]=1
+            COMPREPLY+=("$item")
         fi
     done
+    unset seen
 
-    if [[ -n "$dirpart_lookup" ]]; then
-        # Resolve the working directory for compgen use realpath, but remember
-        # the original textual prefix so completions can stay aligned with what the user typed.
-        resolved_dir="$(realpath -- "$dirpart_lookup" 2>/dev/null)"
-        if [[ -d "$resolved_dir" ]]; then
-            cd -- "$resolved_dir" 2>/dev/null || return
-        else
-            cd "$savedPWD" || return
-            return
-        fi
-    fi
+    # ==========================================================================
+    # 处理波浪号 (~) 路径
+    # ==========================================================================
+    if [[ "$home_start" == true ]]; then
+        local i
+        # 预先计算长度，避免循环中重复计算
+        local home_len=${#HOME}
 
-    # Kernel
-    local -a pinyin_matched
-    if [[ "$is_dir_only" == true ]]; then
-        mapfile -t pinyin_matched < <(
-            compgen -d -- 2>/dev/null |
-            eval $_polLingua_commands "$basepart" $PWD
-        )
-    else
-        mapfile -t pinyin_matched < <(
-            compgen -f -- 2>/dev/null |
-            eval $_polLingua_commands "$basepart" $PWD
-        )
-    fi
-
-    # Restore directory
-    cd "$savedPWD" || return
-
-    if [[ ${#pinyin_matched[@]} -gt 0 ]]; then
-        local display_dirpart="$dirpart"
-        if [[ -n "$orig_dirpart" ]]; then
-            # When the user typed something like ~user/src, prefer their original prefix for display
-            # instead of the realpath directory we temp into.
-            # "snapshot" we saved before comes in handy here.
-            display_dirpart="$orig_dirpart"
-        fi
-        if [[ -n "$display_dirpart" ]]; then
-            local sep="/"
-            [[ "$display_dirpart" == "/" ]] && sep=""
-            for i in "${!pinyin_matched[@]}"; do
-                pinyin_matched[$i]="${display_dirpart}${sep}${pinyin_matched[$i]}"
-            done
-        fi
-
-        local orig_check="$orig_cur"
-        if [[ "$orig_check" == "'"* || "$orig_check" == '"'* ]]; then
-            orig_check="${orig_check:1}"
-        fi
-        if [[ "$orig_check" == ~* ]]; then
-            # Map the tilde-prefix the user entered back onto the filesystem
-            # path produced by compgen so the completion output preserves the symbolic form.
-            local tilde_prefix="${orig_check%%/*}"
-            local expanded_prefix=""
-            if [[ "$tilde_prefix" == "~" ]]; then
-                expanded_prefix="$HOME"
-            elif [[ "$tilde_prefix" == ~+ ]]; then
-                expanded_prefix="$PWD"
-            elif [[ "$tilde_prefix" == ~- ]]; then
-                expanded_prefix="${OLDPWD-}"
-            else
-                local tilde_user="${tilde_prefix:1}"
-                if [[ -n "$tilde_user" ]]; then
-                    # Find the user from passwd.
-                    expanded_prefix="$(getent passwd "$tilde_user" 2>/dev/null | cut -d: -f6)"
-                fi
+        for i in "${!COMPREPLY[@]}"; do
+            local val="${COMPREPLY[$i]}"
+            # 检查是否以 $HOME 开头
+            if [[ "$val" == "$HOME"/* ]]; then
+                # 替换 $HOME 为 ~
+                COMPREPLY[$i]="~${val:$home_len}"
             fi
-            if [[ -n "$expanded_prefix" ]]; then
-                for i in "${!pinyin_matched[@]}"; do
-                    if [[ "${pinyin_matched[$i]}" == "$expanded_prefix" ]]; then
-                        # Exact home directory.
-                        pinyin_matched[$i]="$tilde_prefix"
-                    elif [[ "${pinyin_matched[$i]}" == "$expanded_prefix"/* ]]; then
-                        local suffix="${pinyin_matched[$i]#"$expanded_prefix/"}"
-                        # Join path under the user home.
-                        pinyin_matched[$i]="$tilde_prefix/$suffix"
-                    fi
-                done
-            fi
-        fi
-
-        local current_results_var="current_results"
-        eval "local -a $current_results_var=(\"\${$var_name[@]}\")"
-
-        # Merge results and remove duplicates
-        local -a all_results
-        eval "all_results=(\"\${$current_results_var[@]}\" \"\${pinyin_matched[@]}\")"
-
-        declare -A seen
-        local -a unique_results=()
-        if [[ -n "${all_results[@]}" ]]
-        then
-            for item in "${all_results[@]}"; do
-                if [[ -z "${seen[$item]}" ]]; then
-                    seen["$item"]=1
-                    unique_results+=("$item")
-                fi
-            done
-        fi
-
-        eval "$var_name=(\"\${unique_results[@]}\")"
+        done
     fi
 }

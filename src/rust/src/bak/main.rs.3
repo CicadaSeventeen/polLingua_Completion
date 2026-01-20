@@ -1,0 +1,85 @@
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum ConfigType {
+    Foobar,
+    Animal,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Ecosystem {
+    Sea,
+    Land,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfigArgsAnimal {
+    name: String,
+    taxonomy: String,
+    ecosystem: Ecosystem,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfigArgsFoo {
+    foo: String,
+}
+
+#[derive(Debug, Deserialize)]
+// 关键修改 1: 添加 untagged
+// 因为你的 JSON args 里没有 "animal" 或 "foobar" 这样的外层包裹，
+// 而是直接放的字段，serde 需要通过字段内容自动识别是哪个变体。
+#[serde(untagged)]
+enum ConfigArgs {
+    Animal(ConfigArgsAnimal),
+    Foobar(ConfigArgsFoo),
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfigItem {
+    types: ConfigType,
+    args: ConfigArgs,
+}
+
+fn main() {
+    // 关键修改 2: 修正 JSON 语法错误
+    let json = r#"[
+        {
+            "types": "foobar",
+            "args": {
+                "foo": "bar"
+            }
+        },
+        {
+            "types": "animal",
+            "args": {
+                "name": "dog",
+                "taxonomy": "mammal",
+                "ecosystem": "land"
+            }
+        },
+        {
+            "types": "animal",
+            "args": {
+                "name": "dolphin",
+                "taxonomy": "mammal",
+                "ecosystem": "sea"
+            }
+        }
+    ]"#;
+
+    // 解析
+    let config: Vec<ConfigItem> = serde_json::from_str(json).unwrap();
+
+    for item in config {
+        match item.args {
+            ConfigArgs::Animal(a) => {
+                println!("发现一只动物: {}, 来自 {}", a.name, a.taxonomy);
+            }
+            ConfigArgs::Foobar(f) => {
+                println!("Foobar 内容: {}", f.foo);
+            }
+        }
+    }
+}
