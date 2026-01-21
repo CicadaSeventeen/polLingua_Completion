@@ -9,7 +9,7 @@
 ## 核心特性
 
 * **极速体验**：Rust 核心驱动，毫秒级响应。
-* **广泛的语言支持**：涵盖中日韩（CJK）及多种拉丁、西里尔、希腊语系。
+* **广泛的语言支持**：涵盖中日韩（CJK）及其他语言。
 * **多 Shell 适配**：支持 Bash, Zsh, 及 Fish。
 * **灵活配置**：通过环境变量完全掌控补全行为。
 
@@ -19,11 +19,12 @@
 
 ### CJK（中日韩）
 * **汉语**：
-    * 普通话：支持全拼、首字母、声母。
-    * 注音（台湾）：初步支持。
+    * 普通话：
+         * 支持全拼、首字母、声母。
+         * 注音（台湾）：初步支持。
     * 粤语（香港）：暂不支持（计划中）。
-* **日语**：支持汉字/假名转罗马字（Romaji）、汉字转假名。
-* **韩语**：仅支持谚文（Hangeul），暂不支持韩国汉字（Hanja）。
+* **日语**：支持汉字/假名转罗马字、汉字转假名。
+* **韩语**：仅支持谚文，暂不支持韩国汉字。
 
 ### 其他语言
 * **拉丁字母变体**：如捷克语等。
@@ -36,11 +37,10 @@
 ## Shell 支持与安装
 
 ### Bash
-1.  **常规用户**：如果你使用了 `bash-completion`，支持 **原生 (推荐)** 和 **fzf** 两种模式。
-2.  **ble.sh 用户**：上述模式不可用，有专门的 `ble.sh` 实现。
-3.  **配置**：根据需求 `source` 对应的 `completer` 文件。
+*  **常规用户**：如果你使用了 `bash-completion`，支持 **原生 (推荐)** 和 **fzf** 两种模式。
+*   **ble.sh 用户**：上述模式不可用，有专门的 `ble.sh` 实现。
 
-### Zsh
+ ### Zsh
 * 使用 Zsh 的 `compsys` 系统。
 * 除了 `completer.zsh` 外，若需开箱即用，同时需要 `source setup.zsh`。后者包含必要配置，建议用户根据需求自行修改。
 
@@ -93,7 +93,7 @@
 | :--- | :--- | :--- |
 | **identity** | 不改变任何字符串 | 无 |
 | **unicode** | Unicode 转 ASCII | 无 |
-| **unicode_advanced** | 高级 Unicode 转换 | `anyascii`, `deunicode`, `unidecode` (均为 bool) |
+| **unicode_advanced** | 可配置的Unicode 转换 | `anyascii`, `deunicode`, `unidecode` (均为 bool) |
 | **filter** | 过滤器 | `script`: (zh, jp, ko, cjk, latin...), `mode`: (include, only, no) |
 | **zh_hanzi** | 汉字转拼音 | `format`: (full, first_letter, initials), `heteronym`: (bool) |
 | **zh_hanzi_zhuyin** | 汉字转注音 | `heteronym`: (bool), `tone`: (bool) |
