@@ -1,0 +1,8 @@
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-L", "native=/usr/lib64", # 替换为 libmecab.a 所在的真实目录
+    "-L", "native=/usr/lib64/gcc/x86_64-suse-linux/15" ,
+    "-l", "static=mecab",
+    "-l", "static=stdc++"          # MeCab 通常需要 C++ 标准库
+]

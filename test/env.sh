@@ -1,0 +1,12 @@
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE=true
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE=true
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN=true
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER=true
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII=false
+export POLINGUA_COMPLETION_CONVERTER_ENABLE_INDENTITY=true
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE='filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode'
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE='filter(script=jp,mode=include),jp_all(nbest=5),filter(script=hanzi,mode=no),unicode'
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN='filter(script=ko,mode=include),ko_hangeul,filter(script=hanzi,mode=no),unicode'
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER='filter(script=unicode,mode=include),filter(script=cjk,mode=no),unicode'
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII='filter(script=ascii,mode=only)'
+export POLINGUA_COMPLETION_CONVERTER_CONFIG_INDENTITY='identity'
