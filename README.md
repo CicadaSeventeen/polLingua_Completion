@@ -1,122 +1,92 @@
 # polLingua Completion
-## Multi-language Latinization Completion Supporting zsh and bash, Primarily Supporting Chinese Pinyin (Mandarin)
-Formerly known as `zsh-pinyin-completion-py`, see: https://github.com/CicadaSeventeen/zsh-pinyin-completion-py
 
-[中文版本](https://github.com/CicadaSeventeen/polLingua_Completion/blob/main/README_zh.md)
+**polLingua Completion** is a highly configurable, user-friendly Unicode path completion tool with multi-language and multi-shell support.
 
-## Features:
-1. Supports Latinization completion for some other non-ASCII languages like Russian.
-2. Highly customizable configuration and extensions.
-3. Written purely in a scripting language, making deployment easy without compilation.
+The core has been rewritten in **Rust**, offering significantly improved performance. While the default configuration is "out-of-the-box" for most users, it remains deeply customizable for power users.
 
-## Changes:
-1. Experimental support for **bash** (ble.sh not supported for now) (Thanks to https://github.com/AOSC-Dev/bash-pinyin-completion-rs).
-2. Refactored part of the abstraction layer, basically clearing the obstacles for adding new language support.
-3. Rewrote some environment variable configurations.
+---
 
-## Usage:
-1. Place the compressed package from the release in your desired location.
-2. `source setup.zsh` or `source setup.sh`.
-3. For **zsh**, `setup.zsh` is just a reference; customizing the configuration file according to personal needs is recommended.
+## Key Features
 
-## I Need Support!
-1. Is it possible to support **fish**?
-2. Better **bash** completion generation scripts.
-3. Others.
+* **High Performance**: Powered by a Rust core for millisecond-level responses.
+* **Multilingual**: Comprehensive support for CJK and various international scripts.
+* **Multi-Shell Integration**: Native support for Bash, Zsh, and Fish.
+* **Flexible Config**: Fully controlled via Environment Variables.
 
-## zsh completer
-It is recommended to use the `_polLingua_smart` completer.
+---
 
-Other completers (generally not recommended):
+## Language Support
 
- `_polLingua_startswith`
+### CJK (Chinese, Japanese, Korean)
+* **Chinese**:
+    * Mandarin: Pinyin (Full, First Letter, Initials).
+    * Zhuyin (Bopomofo): Preliminary support.
+    * Cantonese: Not supported yet (Planned).
+* **Japanese**: Supports Kanji/Kana to Romaji and Kanji to Kana.
+* **Korean**: Hangeul support only (Hanja is not supported).
 
- `_polLingua_equal`
+### Others
+* **Latin variants**: e.g., Czech.
+* **Cyrillic**: e.g., Russian.
+* **Greek**.
+* *Note: Support for Arabic, Hindi, Hebrew, and Thai may be limited. If you encounter issues, please contact the developer.*
 
- `_polLingua_file_startswith`
+---
 
- `_polLingua_file_equal`
+## Shell Support & Setup
 
- `_polLingua_dir_startswith`
+### Bash
+1.  **Standard Users**: Supports **Native (Recommended)** and **fzf** completion modes.
+2.  **ble.sh Users**: Use the dedicated `ble.sh` implementation.
+3.  **Setup**: Source the specific `completer` file based on your needs.
 
- `_polLingua_dir_equal`
+### Zsh
+* Utilizes the Zsh `compsys` system.
+* In addition to `completer.zsh`, source `setup.zsh` for an out-of-the-box experience.
 
-Recommended order:
-```
-zstyle ':completion:*' completer _commands _polLingua_smart _complete _correct _approximate _list
-```
-`_polLingua_smart` considers falling back to `_files`, so using `_files` is generally not recommended.
+### Fish (Recommended)
+* **abbr_fzf.fish (Recommended)**: Depends on `fzf`. This is currently the best practice.
+* **abbr.fish**: Basic support without `fzf` dependency.
+* **Usage**: To trigger decoding, wrap the target characters like `@foo@` or `::foo::` and press **Space**.
+* **completer_fzf.fish**: For those who prefer traditional Tab completion (requires `fzf`).
 
-## Daemon (turbo) Mode
-The normal mode is quite demanding on the CPU; daemon mode provides acceleration and is enabled by default.
+---
 
-The daemon mode primarily utilizes Linux's `prctl`. It should still be available on non-Linux systems like macOS or BSD, but shutting it down gracefully might not be possible. If residual daemons remain, they should have no substantial impact, although they might look unsightly.
+## Configuration (Environment Variables)
 
-## Configuration Method: Environment Variables (Note: Requires `export`)
-#### `COMPLETION_CONVERTER_LIST`
-A list of enabled string translation/conversion (converter) mechanisms. This is rather complex; non-advanced users are advised not to edit it.
+Configure the tool by exporting the following variables in your shell profile:
 
-Default value is:
-`{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{filter_no_hanzi,unidecode}:{filter_no_hanzi:anyascii}:identity`
+### 1. Feature Toggles
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE` | Enable Chinese support | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE` | Enable Japanese support | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN` | Enable Korean support | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER` | Enable other Unicode scripts | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII` | Process ASCII characters | `false` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY` | Match original string | `true` |
 
-Where:
+### 2. Converter Chain Configuration
+Customize specific logic for each language:
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE`
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE`
+* ...and so on.
 
-**`:`** acts like the colon separator in the environment variable PATH, separating parallel, distinct string converter groups.
+**Global Override**:
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG`: If set, overrides all specific language configs.
 
-**`,`** connects multiple converters that take effect sequentially within the same converter group.
+---
 
-**`{}`** wraps the converters in the same group; it can be omitted.
+## Converters Reference
 
- The existence of multiple repeating groups is to correspond to the associated parameter list.
+| Converter | Description | Parameters |
+| :--- | :--- | :--- |
+| **identity** | No changes | None |
+| **unicode** | Unicode to ASCII | None |
+| **unicode_advanced** | Advanced Unicode conv | `anyascii`, `deunicode`, `unidecode` (bool) |
+| **filter** | Script filter | `script`: (zh, jp, ko...), `mode`: (include, only, no) |
+| **zh_hanzi** | Hanzi to Pinyin | `format`: (full, initials...), `heteronym`: (bool) |
+| **jp_all** | Japanese to Romaji/Kana | `output`: (romaji, kana), `nbest`: (1-5) |
+| **ko_hangeul** | Hangeul to ASCII/Jamo | `output`: (ascii, jamo), `capitalize`: (no, all...) |
 
-##### Currently Supported Converters:
-
- **Unicode General**: `unidecode`, `anyascii`
-
- **Chinese Pinyin**: `pypinyin`, `pypinyin_filtered`
-
- **Filter**: `filter_include_hanzi`, `filter_all_hanzi`, `filter_no_hanzi`, `filter_include_unicode`, `filter_no_unicode`, `filter_all_ascii`
-
- **Basic**: `simplify`, `remove`, `first_letter`
-
- **Case**: `upper`, `lower`, `capitalize`, `capitalize_title`
-
- **Chinese Initial Case**: `initials_capitalize`, `initials_capitalize_title`
-
-#### `COMPLETION_CONVERTER_ARGUMENT_LIST`
-The parameter list corresponding to the converter groups. This is quite complex; non-advanced users are advised not to edit it.
-
-Default value is:
-` {style=normal#filter=capitalize,none}:{style=first_letter#filter=capitalize,none}:{style=initials#filter=initials_capitalize,none}:{style=normal,none}:{style=first_letter,none}:{style=initials,none}:{none,none}:{none,none}:none`
-
-Where:
-
-**`#`** connects different parameters taking effect on the same converter.
-
-Most converters have no parameters; fill in `none`.
-
-##### `pypinyin` Parameters:
-
-**`style`**: The type of Latin string output. Supports `normal`, `first_letter`, and `initials`.
-
-**`heteronym`**: Whether to enable support for polyphones (multiple pronunciations). Default is `auto`; other options are `on`, `off`, `all`.
-
-**`strict`**: Strict mode, usually not required to be enabled.
-
-##### `pypinyin_filtered` Parameters:
-Basically the same as above, but supports the `filter` parameter. It supports enabling a filter-type converter that only acts on Chinese pinyin, used to handle filenames mixed with Chinese characters and Latin letters.
-
-#### `COMPLETION_FILENAME_MATCH_MODE`
-Whether to support partial completion. Defaults to `startswith`; can be set to `equal`.
-
-#### `COMPLETION_CASE_INSENSITIVE`
-Whether completion is case-insensitive. Setting it to `yes` performs case-insensitive fuzzy matching for all input. Defaults to `no`.
-
-#### `COMPLETION_FILE_TYPE`
-Matches directories or non-directory files. Defaults to `dir:file`; you can select `dir` or `file` separately. Configuration modification is generally not recommended.
-
-#### `COMPLETION_SHOW_HIDDEN`
-Whether to match hidden files. Defaults to `yes`.
-
-#### `COMPLETION_STRING_QUOTE_MODE`
-Internal variable, usually does not require configuration.
+---

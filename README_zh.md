@@ -1,129 +1,103 @@
 # polLingua Completion
-## 支持zsh和bash的多语言拉丁化补全，主要支持汉语拼音（普通话）
-以前叫做`zsh-pinyin-completion-py`，见：https://github.com/CicadaSeventeen/zsh-pinyin-completion-p
 
-## 特色：
-支持部分其他非ascii语言如俄语的拉丁化补全
+**polLingua Completion** 是一个支持多语言、多 Shell、高度可配置且用户友好的 Unicode 路径补全工具。
 
-高度可自定义的配置和扩展
+新版本使用 **Rust** 重写了核心逻辑，性能得到了质的飞跃。对于大多数用户，默认配置即可“开箱即用”；对于高级用户，它提供了极强的自定义空间。
 
-纯脚本语言写成，方便部署，无需编译
+---
 
-## 变更：
-1、对bash的实验性支持（暂不支持ble.sh） (感谢https://github.com/AOSC-Dev/bash-pinyin-completion-rs)
+## 核心特性
 
-2、重构部分抽象层，基本扫清添加新语言支持的障碍
+* **极速体验**：Rust 核心驱动，毫秒级响应。
+* **广泛的语言支持**：涵盖中日韩（CJK）及多种拉丁、西里尔、希腊语系。
+* **多 Shell 适配**：支持 Bash, Zsh, 及 Fish。
+* **灵活配置**：通过环境变量完全掌控补全行为。
 
-3、重写了部分环境变量配置
+---
 
-## 使用方法：
-1、将release中的压缩包放在你希望的位置
+## 语言支持情况
 
-2、`source setup.zsh`或`source setup.zsh`
+### CJK（中日韩）
+* **汉语**：
+    * 普通话：支持全拼、首字母、声母。
+    * 注音（台湾）：初步支持。
+    * 粤语（香港）：暂不支持（计划中）。
+* **日语**：支持汉字/假名转罗马字（Romaji）、汉字转假名。
+* **韩语**：仅支持谚文（Hangeul），暂不支持韩国汉字（Hanja）。
 
-3、对`zsh`而言，`setup.zsh`只是一个参考，推荐根据个人需求自定义配置文件
+### 其他语言
+* **拉丁字母变体**：如捷克语等。
+* **西里尔字母**：如俄语。
+* **希腊字母**。
+* *注：理论上对其他语言有初步支持，但对阿拉伯语、印地语、希伯来语、泰语支持较弱。如遇问题欢迎提交反馈。*
 
-##  我需要支持！
-1、是否可能支持`fish`？
+---
 
-2、更好的`bash`补全生成脚本
+## Shell 支持与安装
 
-3、其他
+### Bash
+1.  **常规用户**：如果你使用了 `bash-completion`，支持 **原生 (推荐)** 和 **fzf** 两种模式。
+2.  **ble.sh 用户**：上述模式不可用，有专门的 `ble.sh` 实现。
+3.  **配置**：根据需求 `source` 对应的 `completer` 文件。
 
-## zsh completer
-推荐使用`_polLingua_smart` completer
+### Zsh
+* 使用 Zsh 的 `compsys` 系统。
+* 除了 `completer.zsh` 外，若需开箱即用，同时需要 `source setup.zsh`。后者包含必要配置，建议用户根据需求自行修改。
 
-其他的completer（通常不推荐使用）:
+### Fish (推荐)
+* **abbr_fzf.fish (推荐)**：依赖 `fzf`，这是目前的最佳实践。
+* **abbr.fish**：不依赖 `fzf`，仅提供基础支持。
+* **触发方式**：在 Fish 中使用 `abbr` API，输入 `@foo@` 或 `::foo::` 后按下 **空格** 即可自动触发解码。
+* **completer_fzf.fish**：如果你习惯使用 Tab 补全，请使用此版本（依赖 `fzf`）。
 
-_polLingua_startswith
+---
 
-_polLingua_equal
+## 系统要求
 
-_polLingua_file_startswith
+* **测试环境**：目前主要在 Gnu/Linux 上进行测试。
+* **兼容性**：理论支持所有遵循 XDG 标准的类 Unix 环境。
+* **二进制**：提供 Linux 静态链接二进制文件。BSD、macOS 用户请自行编译。
 
-_polLingua_file_equal
+---
 
-_polLingua_dir_startswith
+## 配置 (Environment Variables)
 
-_polLingua_dir_equal
+使用环境变量进行配置，请记得在 shell 配置文件中 `export` 它们。
 
-推荐的顺序：
-```
-zstyle ':completion:*' completer _commands _polLingua_smart _complete _correct _approximate _list
-```
-`_polLingua_smart`考虑了fallback到`_files`的情况，因此通常不推荐用`_files`
+### 1. 功能开关
+| 环境变量 | 描述 | 默认值 |
+| :--- | :--- | :--- |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE` | 是否启用中文支持 | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE` | 是否启用日语支持 | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN` | 是否启用韩语支持 | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER` | 是否启用其他 Unicode 语言 | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII` | 是否处理 ASCII 字符 | `false` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY` | 是否对任意字符串匹配自身 | `true` |
 
-## Daemon(turbo)模式
-普通模式对cpu要求较大，daemon模式提供了加速，默认已经启用。
+### 2. 转换器详细配置 (Converter Config)
+你可以通过以下变量自定义特定语言的转换链（格式见下方 Converter 章节）：
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE`
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE`
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN`
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER`
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII`
 
-deamon模式优先采用Linux的`prctl`，在非Linux系统如macos或BSD仍然应当可用，但可能无法很优雅地正常关闭。若出现驻留的残余daemon，应当没有实质影响，但是会很丑陋
+**全局覆盖变量**：
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG`：如果设置，将覆盖上述所有特定语言的配置。
 
-## 配置方法：环境变量，注意需要`export`
-#### `COMPLETION_CONVERTER_LIST`
-包括启用的各种字符串翻译/转换器(converter)的列表，较为复杂，非高级用户不建议编辑。
+---
 
-默认为
-`{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin_filtered,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{pypinyin,anyascii}:{filter_no_hanzi,unidecode}:{filter_no_hanzi:anyascii}:identity`
+## 转换器 (Converters) 参数详解
 
-其中:
+| 转换器名称 | 描述 | 参数 |
+| :--- | :--- | :--- |
+| **identity** | 不改变任何字符串 | 无 |
+| **unicode** | Unicode 转 ASCII | 无 |
+| **unicode_advanced** | 高级 Unicode 转换 | `anyascii`, `deunicode`, `unidecode` (均为 bool) |
+| **filter** | 过滤器 | `script`: (zh, jp, ko, cjk, latin...), `mode`: (include, only, no) |
+| **zh_hanzi** | 汉字转拼音 | `format`: (full, first_letter, initials), `heteronym`: (bool) |
+| **zh_hanzi_zhuyin** | 汉字转注音 | `heteronym`: (bool), `tone`: (bool) |
+| **jp_all** | 日语转罗马字/假名 | `output`: (romaji, ascii, kana), `nbest`: (1-5) |
+| **ko_hangeul** | 韩语转 ASCII/字母 | `output`: (ascii, jamo), `capitalize`: (no, all, choseong) |
 
-`:` 类似于环境变量PATH中的冒号，分隔彼此平行的不同字符串转化器组。
-
-`,` 连接同一组转换器组中先后发挥作用的多个转换器。
-
-`{}` 包裹同一组别的转换器组，可以省略
-
-这里之所以存在多个重复组，是为了和对应的参数列表对应。
-
-##### 目前支持的转换器：
-
-unicode通用：unidecode, anyascii
-
-汉语拼音: pypinyin, pypinyin_filtered
-
-过滤器(filter): filter_include_hanzi, filter_all_hanzi, fitler_no_hanzi, filter_include_unicode, filter_no_unicode, filter_all_ascii
-
-基础: simplify, remove, first_letter
-
-大小写: upper, lower, capitalize, capitalize_title
-
-汉语声母大小写: initials_capitalize, initials_capitalize_title
-
-#### `COMPLETION_CONVERTER_ARGUMENT_LIST`
-转化器组对应的参数列表。较为复杂，非高级用户不建议编辑。
-
-默认为
-` {style=normal#filter=capitalize,none}:{style=first_letter#filter=capitalize,none}:{style=initials#filter=initials_capitalize,none}:{style=normal,none}:{style=first_letter,none}:{style=initials,none}:{none,none}:{none,none}:none`
-
-其中：
-
-`#` 连接了对同一个转化器起效的不同参数
-
-多数转换器没有参数，请填入none
-
-##### pypinyin的参数:
-
-`style` 输出的拉丁字符串类型，支持`normal`, `first_letter`和`initials`
-
-`heteronym` 是否开启多音字支持，默认`auto`，其他可选`on`, `off`, `all`
-
-`strict` 严格模式，通常不需要启用
-
-##### pypinyin_filtered的参数:
-
-基本同上，但支持`filter`参数。支持启用一个filter类型的转换器，且只对于汉语拼音生效，用于处理汉字和拉丁字母混合的文件名。
-
-#### `COMPLETION_FILENAME_MATCH_MODE`
-是否支持部分补全，默认为`startswith`，可选`equal`
-
-#### `COMPLETION_CASE_INSENSITIVE`
-是否大小写不敏感。设置为`yes`则对一切输入进行大小写模糊匹配。默认为`no`
-
-#### `COMPLETION_FILE_TYPE`
-匹配目录还是非目录文件，默认`dir:file`，可以单独选择`dir`或`file`。通常不建议修改配置。
-
-#### `COMPLETION_SHOW_HIDDEN`
-是否匹配隐藏文件，默认为`yes`
-
-#### `COMPLETION_STRING_QUOTE_MODE`
-内部变量，通常不需要配置
+---

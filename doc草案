@@ -1,0 +1,196 @@
+polLingua Completion
+多语言支持、多shell支持的、高度可配置的、用户友好的unicode路径补全工具。
+新版使用rust重写了核心部分，速度大大改善。
+默认配置对多数用户是开箱可用的，自定义只对高级用户必要。
+
+语言支持：
+CJK：
+	汉语：
+		普通话：
+			汉语拼音
+			国语（台湾）注音的初步支持
+		### 粤语（香港）—— 暂不支持，计划中
+	日语：
+		汉字和假名转化为罗马字
+		汉字转化为假名
+	韩语：
+		仅谚文，不支持韩国汉字
+其他：
+	使用拉丁字母变体的语言：如捷克语
+	使用西里尔字母的语言：如俄语
+	希腊字母的语言
+	理论上对其他语言有初步支持，但对阿拉伯语、印地语、希伯来语、泰语等语言可能支持较差或存在问题。如你使用这些语言，且发现了问题，请与我联系。
+
+shell支持：
+支持bash、zsh和fish，具体情况如下。
+bash:
+对于使用bash-completion的用户（大多数情况）来说，有原生（推荐）和fzf两种补全模式。对于使用ble.sh的用户来说，这两者都是不可用的，有专门的ble.sh实现。请根据你的需求source其中一个completer文件。
+zsh:
+请使用zsh compsys系统。除了completer.zsh之外，如果需要开箱可用，同时需要source setup.zsh。后者包含一些必要的配置，但可以高度自定义，建议用户根据需求自己配置。
+fish:
+推荐使用abbr_fzf.fish，这依赖fzf。由于技术原因，这是我目前达成的最好实践。不依赖fzf的abbr.fish只有基础的支持。
+abbr是fish内置的纠错api，它不需要tab，而是遵循自动触发机制。建议使用fish的用户稍微看一下提供的shell脚本，它们也是简单而高度可修改的。
+对于使用abbr.fish或abbr_fzf.fish的用户，请注意为了主动触发abbr，请这样书写需要进行解码的字符:
+cd @foo@
+或
+cd ::foo::
+然后按下空格会自动处理。
+对于使用abbr_fzf.fish的用户，默认启用了全自动触发的机制。
+希望使用tab补全的用户，也有一个依赖fzf的completer_fzf.fish实现。
+
+系统支持：
+目前只在Gnu/Linux上得到了测试。
+理论上在类unix环境下，运行时只依赖XDG标准实现
+提供针对linux环境的静态链接二进制，其他系统请自行编译。
+对于使用BSD、Macos或其他系统的用户，如果遇到了问题，请与我联系。
+
+配置：
+使用环境变量进行一切配置（请记得export），以下是环境变量
+是否启用中文支持（true/false 默认true）
+POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE
+以下基本同上（请你帮我生成）
+POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE
+POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN
+POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER
+POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII # 是否处理ascii字符，注意只有它默认为false。
+是否对任意字符串匹配自身（true/false 默认true）
+POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTIT
+
+中文支持的具体配置格式
+POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE
+形如：
+"filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode:filter(script=zh,mode=include),zh_hanzi(heteronym=true,format=first_letter),unicode"
+':'代表逻辑上平行，','代表逻辑上链式处理中前后相继，括号内为每一步的对应参数
+参数过于复杂，对具体参数有需要的请看下方converter章节
+以下基本同上（请你帮我生成）
+POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE
+POLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN
+POLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER
+POLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII
+
+启用的全部converter（嵌套）列表
+POLINGUA_COMPLETION_CONVERTER_CONFIG
+格式同上，默认从上述环境变量中生成。如果设置了，会覆盖上述变量。
+
+临时文件路径
+POLINGUA_COMPLETION_RUNTIME_TMPFILE_PATH
+默认在XDG_RUNTIME_DIR下
+
+convercter：
+identity
+不改变任何字符串
+无参数
+
+unicode
+将任意unicode转化为ascii字符串
+无参数
+
+unicode_advanced
+将任意unicode转化为ascii字符串，但允许高级配置
+参数：
+anyascii: bool
+deunicode: bool
+unidecode: bool
+这三个布尔类参数标记是否打开对应的解码库后端。
+
+filter
+过滤器，只保留符合要求的字符串传到链式处理的下一步
+参数：
+选择的书写系统或语言
+script
+enum(of string) 字符串的枚举，可以是以下之一
+	ascii,
+	unicode,
+	latin,
+	greek,
+	cyrillic,
+	cjk,
+	hanzi, #包括日本汉字
+	kana,
+	hangeul,
+	zh, #汉语
+	jp, #日语
+	ko, #韩语
+
+选择的模式
+mode
+字符串的枚举，可以为以下之一
+	no, #不包含选择的书写系统
+	include, #包含 （默认）
+	only, #仅包含
+
+zh_hanzi
+alias: zh_hanzi_pinyin
+汉语汉字转化为普通话拼音（ascii）
+参数：
+输出的格式
+format
+字符串的枚举，可以为以下之一
+full 全拼（默认）
+first_letter 首字母
+initials 声母
+
+大写化
+capitalize
+字符串的枚举，可以为以下之一
+initials,
+first_letter,
+all,
+no, 默认
+
+多音字功能
+heteronym
+布尔类，开关多音字支持，默认为false（因为多音字性能耗费大）
+
+zh_hanzi_zhuyin
+汉语汉字转化为注音
+# 非常初步的支持，可能有任何问题
+参数：
+heteronym
+布尔类型，多音字支持，默认为false
+tone
+布尔类型，是否带有声调，默认为false
+
+jp_all
+alias: jp_kanji_and_kana
+日语（日本汉字和假名）转化为ascii或假名
+参数：
+ouput
+字符串的枚举，可以为
+romaji
+ascii #按照更生硬的规则转化为romaji,可能在特殊情况下有用
+kana #用于将日语转为纯假名形式
+
+nbest
+输出最佳匹配的个数，为8位无符号整数。一般不宜大于5
+默认为1（因为性能耗费较大）
+
+jp_kana
+日语假名转化为ascii
+参数：
+ouput
+字符串的枚举，可以为
+romaji
+ascii #按照更生硬的规则转化为romaji,可能在特殊情况下有用
+
+ko_hangeul
+韩语谚文转化为ascii或jamo
+参数：
+capitalize
+字符串的枚举，大写化，可以为
+choseong,  #初声
+first_letter,
+all,
+no, #默认
+
+output
+枚举类型，输出为ascii或韩语字母（jamo）
+可以是
+ascii
+jamo
+
+### 目前没有输出为首字母的支持，计划中
+
+
+
+
