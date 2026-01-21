@@ -10,7 +10,7 @@ The core has been rewritten in **Rust**, offering significantly improved perform
 
 * **High Performance**: Powered by a Rust core for millisecond-level responses.
 * **Multilingual**: Comprehensive support for CJK and various international scripts.
-* **Multi-Shell Integration**: Native support for Bash, Zsh, and Fish.
+* **Multi-Shell Integration**: Native support for Bash, Zsh, and `fzf` support for Fish.
 * **Flexible Config**: Fully controlled via Environment Variables.
 
 ---
@@ -19,8 +19,9 @@ The core has been rewritten in **Rust**, offering significantly improved perform
 
 ### CJK (Chinese, Japanese, Korean)
 * **Chinese**:
-    * Mandarin: Pinyin (Full, First Letter, Initials).
-    * Zhuyin (Bopomofo): Preliminary support.
+    * Mandarin:
+         *  Pinyin.
+         *  Zhuyin (Bopomofo): Preliminary support.
     * Cantonese: Not supported yet (Planned).
 * **Japanese**: Supports Kanji/Kana to Romaji and Kanji to Kana.
 * **Korean**: Hangeul support only (Hanja is not supported).
@@ -36,15 +37,14 @@ The core has been rewritten in **Rust**, offering significantly improved perform
 ## Shell Support & Setup
 
 ### Bash
-1.  **Standard Users**: Supports **Native (Recommended)** and **fzf** completion modes.
-2.  **ble.sh Users**: Use the dedicated `ble.sh` implementation.
-3.  **Setup**: Source the specific `completer` file based on your needs.
+* **Standard Users**: Supports **Native (Recommended)** and **fzf** completion modes.
+* **ble.sh Users**: Use the dedicated `ble.sh` implementation.
 
 ### Zsh
 * Utilizes the Zsh `compsys` system.
 * In addition to `completer.zsh`, source `setup.zsh` for an out-of-the-box experience.
 
-### Fish (Recommended)
+### Fish
 * **abbr_fzf.fish (Recommended)**: Depends on `fzf`. This is currently the best practice.
 * **abbr.fish**: Basic support without `fzf` dependency.
 * **Usage**: To trigger decoding, wrap the target characters like `@foo@` or `::foo::` and press **Space**.
@@ -83,7 +83,7 @@ Customize specific logic for each language:
 | :--- | :--- | :--- |
 | **identity** | No changes | None |
 | **unicode** | Unicode to ASCII | None |
-| **unicode_advanced** | Advanced Unicode conv | `anyascii`, `deunicode`, `unidecode` (bool) |
+| **unicode_advanced** | Configurable Unicode conv | `anyascii`, `deunicode`, `unidecode` (bool) |
 | **filter** | Script filter | `script`: (zh, jp, ko...), `mode`: (include, only, no) |
 | **zh_hanzi** | Hanzi to Pinyin | `format`: (full, initials...), `heteronym`: (bool) |
 | **jp_all** | Japanese to Romaji/Kana | `output`: (romaji, kana), `nbest`: (1-5) |
