@@ -118,9 +118,9 @@ filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode:filter(script=zh
 | :--- | :--- | :--- | :-- |
 | **identity** | Returns the string unchanged | -- | -- |
 | **unicode** | Unicode to ASCII conversion | -- | -- |
-| **unicode_advanced** | Configurable Unicode conversion | `anyascii` (true/**false**) <br> `deunicode` (true/**false**)<br> `unidecode` (true/**false**) | Select backend toggle |
-| **filter** | Filters strings matching rules | `script`: (enum: zh, jp, ko, cjk, hanzi, kana, hangeul, latin, greek, cyrillic)<br>`mode`: (enum: **include**, only, no) | Select language/script type and filtering criteria |
-| **zh_hanzi** | Hanzi to Pinyin | `format`: (enum: **full**, first_letter, initials) <br>`capitalize`: (enum: **no**, all, first_letter, initials) <br>`heteronym`: (true/**false**) | Output format; capitalization; polyphone support. Alias: **zh_hanzi_pinyin** |
-| **zh_hanzi_zhuyin** | Hanzi to Zhuyin | `heteronym`: (true/**false**)<br>`tone`: (true/**false**) | Polyphone support; tone marks. Initial support |
-| **jp_all** | Japanese to Romaji/Kana | `output`: (enum: **romaji**, ascii, kana)<br> `nbest`: (unsigned int, **1**) | Output format (ascii is more rigid); Best matches count (suggest < 5). Alias: **jp_kanji_and_kana** |
-| **ko_hangeul** | Hangul to ASCII/Jamo | `output`: (enum: **ascii**, jamo)<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | Choseong (initial consonant) mode support planned |
+| **unicode_advanced** | Configurable Unicode conversion | `anyascii` (true/**false**) <br> `deunicode` (true/**false**)<br> `unidecode` (true/**false**) | * Select backend toggle |
+| **filter** | Filters strings matching rules | `script`: (enum: zh, jp, ko, cjk, hanzi, kana, hangeul, latin, greek, cyrillic)<br>`mode`: (enum: **include**, only, no) | * Select language/script type <br> * filtering criteria |
+| **zh_hanzi** | Hanzi to Pinyin | `format`: (enum: **full**, first_letter, initials) <br>`capitalize`: (enum: **no**, all, first_letter, initials) <br>`heteronym`: (true/**false**) | Alias: **zh_hanzi_pinyin** |
+| **zh_hanzi_zhuyin** | Hanzi to Zhuyin | `heteronym`: (true/**false**)<br>`tone`: (true/**false**) | *Initial support* |
+| **jp_all** | Japanese to Romaji/Kana | `output`: (enum: **romaji**, ascii, kana)<br> `nbest`: (unsigned int, **1**) | * Output format (ascii is more raw)<br>* Best matches count (suggest < 5)<br> Alias: **jp_kanji_and_kana** |
+| **ko_hangeul** | Hangul to ASCII/Jamo | `output`: (enum: **ascii**, jamo)<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | Similar to Chinese <br>*Choseong (initial consonant) mode support planned* |
