@@ -1,5 +1,7 @@
 # polLingua Completion
 
+[简体中文](https://github.com/CicadaSeventeen/polLingua_Completion/blob/main/README_zh.md)
+
 **polLingua Completion** is a multi-language, multi-shell, highly configurable, and user-friendly Unicode path completion tool.
 
 While the default configuration works out-of-the-box for most users, it provides extensive customization space for power users.
