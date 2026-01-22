@@ -1,92 +1,126 @@
 # polLingua Completion
 
-**polLingua Completion** is a highly configurable, user-friendly Unicode path completion tool with multi-language and multi-shell support.
+**polLingua Completion** is a multi-language, multi-shell, highly configurable, and user-friendly Unicode path completion tool.
 
-The core has been rewritten in **Rust**, offering significantly improved performance. While the default configuration is "out-of-the-box" for most users, it remains deeply customizable for power users.
+While the default configuration works out-of-the-box for most users, it provides extensive customization space for power users.
 
----
-
-## Key Features
-
-* **High Performance**: Powered by a Rust core for millisecond-level responses.
-* **Multilingual**: Comprehensive support for CJK and various international scripts.
-* **Multi-Shell Integration**: Native support for Bash, Zsh, and `fzf` support for Fish.
-* **Flexible Config**: Fully controlled via Environment Variables.
+The v1 release features a core logic rewritten in **Rust**, effectively resolving performance issues. It supports static compilation and provides statically-linked binary distributions for Gnu/Linux.
 
 ---
 
-## Language Support
+## Core Features
+
+* **Broad Language Support**: Covers CJK (Chinese, Japanese, Korean) and many other languages.
+* **Multi-Shell Compatibility**: Supports Bash, Zsh, and Fish.
+* **Flexible Configuration**: Full control over completion behavior via environment variables.
+
+---
+
+## Language Support Status
 
 ### CJK (Chinese, Japanese, Korean)
 * **Chinese**:
     * Mandarin:
-         *  Pinyin.
-         *  Zhuyin (Bopomofo): Preliminary support.
-    * Cantonese: Not supported yet (Planned).
-* **Japanese**: Supports Kanji/Kana to Romaji and Kanji to Kana.
-* **Korean**: Hangeul support only (Hanja is not supported).
+        * Hanyu Pinyin.
+        * *Initial support* for Zhuyin/Bopomofo (Taiwan).
+    * Cantonese (Hong Kong): **Not** currently supported (planned).
+* **Japanese**: Supports Kanji/Kana to Romaji and Kanji to Kana conversion.
+* **Korean**: Supports Hangul only; Hanja is not supported.
 
-### Others
-* **Latin variants**: e.g., Czech.
-* **Cyrillic**: e.g., Russian.
-* **Greek**.
-* *Note: Support for Arabic, Hindi, Hebrew, and Thai may be limited. If you encounter issues, please contact the developer.*
+### Other Languages
+* **Latin Script Variants**: Such as Czech, etc.
+* **Cyrillic Script**: Such as Russian.
+* **Greek Script**.
+* *Note: Preliminary support for other languages exists in theory but lacks extensive testing. Feedback is welcome if you encounter issues.*
 
 ---
 
-## Shell Support & Setup
+## Shell Support & Installation
+
+Requirements:
+
+* Place `pollingua-completion-core` in your PATH and grant execution permissions.
+
+* `source` the corresponding shell script file based on your environment.
 
 ### Bash
-* **Standard Users**: Supports **Native (Recommended)** and **fzf** completion modes.
-* **ble.sh Users**: Use the dedicated `ble.sh` implementation.
+* **Regular Users**: Typically uses `bash-completion`. Supports both **Native (Recommended)** and **fzf** modes.
+* **ble.sh Users**: The above modes are unavailable; a dedicated `ble.sh` implementation is provided.
 
 ### Zsh
-* Utilizes the Zsh `compsys` system.
-* In addition to `completer.zsh`, source `setup.zsh` for an out-of-the-box experience.
+* Please use Zsh's `compsys` system.
+* In addition to `completer.zsh`, you need to load `setup.zsh` for an out-of-the-box experience. The latter contains necessary configurations which users are encouraged to modify as needed.
 
-### Fish
-* **abbr_fzf.fish (Recommended)**: Depends on `fzf`. This is currently the best practice.
-* **abbr.fish**: Basic support without `fzf` dependency.
-* **Usage**: To trigger decoding, wrap the target characters like `@foo@` or `::foo::` and press **Space**.
-* **completer_fzf.fish**: For those who prefer traditional Tab completion (requires `fzf`).
+### Fish (Recommended)
+* **abbr_fzf.fish (Recommended)**: Implemented using Fish's `abbr` (abbreviation) error-correction system and relies on `fzf`. This is currently the best practice.
+* **abbr.fish**: Uses the `abbr` system without `fzf` dependency; provides basic support only.
+* **About abbr**: `abbr` does not use the Tab key for completion; it is semi-automatic.
+    * **Manual Trigger**: Type `@foo@` or `::foo::` and press **Space** to automatically trigger decoding. (Behavior can be modified in the Fish scripts).
+    * **Auto Trigger**: Type completable text and press **Space** to trigger decoding (Enabled by default for `abbr_fzf.fish`, disabled for `abbr.fish`).
+* **completer_fzf.fish**: Use this version if you prefer traditional **Tab** completion (requires `fzf`).
+
+---
+
+## System Requirements
+
+* **Test Environment**: Primarily tested on Gnu/Linux.
+* **Compatibility**: Theoretically supports all Unix-like environments following XDG standards. Please report any issues.
+* **Binaries**: Linux statically-linked binaries are provided. BSD, macOS, and other system users should compile from source.
 
 ---
 
 ## Configuration (Environment Variables)
 
-Configure the tool by exporting the following variables in your shell profile:
+Configuration is handled via environment variables. Remember to `export` them in your shell profile.
 
 ### 1. Feature Toggles
-| Variable | Description | Default |
+| Environment Variable | Description | Default |
 | :--- | :--- | :--- |
 | `POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE` | Enable Chinese support | `true` |
 | `POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE` | Enable Japanese support | `true` |
 | `POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN` | Enable Korean support | `true` |
-| `POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER` | Enable other Unicode scripts | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER` | Enable other Unicode languages | `true` |
 | `POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII` | Process ASCII characters | `false` |
-| `POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY` | Match original string | `true` |
+| `POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY` | Match any string against itself | `true` |
 
-### 2. Converter Chain Configuration
-Customize specific logic for each language:
+### 2. Converter Details (Converter Config)
+You can customize the conversion chain for specific languages using the following variables; otherwise, complex default values are used.
+
 * `POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE`
+
 * `POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE`
-* ...and so on.
+
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN`
+
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER`
+
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII`
+
+**Configuration Format Example**:
+```
+filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode:filter(script=zh,mode=include),zh_hanzi(heteronym=true,format=first_letter),unicode:identity
+```
+
+* Colons (`:`) separate parallel logic.
+
+* Commas (`,`) connect sequential logic.
+
+* Parentheses `()` contain parameter lists.
 
 **Global Override**:
-* `POLINGUA_COMPLETION_CONVERTER_CONFIG`: If set, overrides all specific language configs.
+* `POLINGUA_COMPLETION_CONVERTER_CONFIG`: Not set by default; if set, it overrides all language-specific configurations listed above.
 
 ---
 
-## Converters Reference
+## Converter Parameter Details
 
-| Converter | Description | Parameters |
-| :--- | :--- | :--- |
-| **identity** | No changes | None |
-| **unicode** | Unicode to ASCII | None |
-| **unicode_advanced** | Configurable Unicode conv | `anyascii`, `deunicode`, `unidecode` (bool) |
-| **filter** | Script filter | `script`: (zh, jp, ko...), `mode`: (include, only, no) |
-| **zh_hanzi** | Hanzi to Pinyin | `format`: (full, initials...), `heteronym`: (bool) |
-| **jp_all** | Japanese to Romaji/Kana | `output`: (romaji, kana), `nbest`: (1-5) |
-| **ko_hangeul** | Hangeul to ASCII/Jamo | `output`: (ascii, jamo), `capitalize`: (no, all...) |
-
----
+| Converter Name | Description | Parameters (**Bold** denotes default) | Notes |
+| :--- | :--- | :--- | :-- |
+| **identity** | Returns the string unchanged | -- | -- |
+| **unicode** | Unicode to ASCII conversion | -- | -- |
+| **unicode_advanced** | Configurable Unicode conversion | `anyascii` (true/**false**) <br> `deunicode` (true/**false**)<br> `unidecode` (true/**false**) | Select backend toggle |
+| **filter** | Filters strings matching rules | `script`: (enum: zh, jp, ko, cjk, hanzi, kana, hangeul, latin, greek, cyrillic)<br>`mode`: (enum: **include**, only, no) | Select language/script type and filtering criteria |
+| **zh_hanzi** | Hanzi to Pinyin | `format`: (enum: **full**, first_letter, initials) <br>`capitalize`: (enum: **no**, all, first_letter, initials) <br>`heteronym`: (true/**false**) | Output format; capitalization; polyphone support. Alias: **zh_hanzi_pinyin** |
+| **zh_hanzi_zhuyin** | Hanzi to Zhuyin | `heteronym`: (true/**false**)<br>`tone`: (true/**false**) | Polyphone support; tone marks. Initial support |
+| **jp_all** | Japanese to Romaji/Kana | `output`: (enum: **romaji**, ascii, kana)<br> `nbest`: (unsigned int, **1**) | Output format (ascii is more rigid); Best matches count (suggest < 5). Alias: **jp_kanji_and_kana** |
+| **ko_hangeul** | Hangul to ASCII/Jamo | `output`: (enum: **ascii**, jamo)<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | Choseong (initial consonant) mode support planned |
