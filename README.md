@@ -23,7 +23,7 @@ The v1 release features a core logic rewritten in **Rust**, effectively resolvin
 ### CJK (Chinese, Japanese, Korean)
 * **Chinese**:
     * Mandarin:
-        * Hanyu Pinyin.
+        * Putonghua Pinyin.
         * *Initial support* for Zhuyin/Bopomofo (Taiwan).
     * Cantonese (Hong Kong): **Not** currently supported (planned).
 * **Japanese**: Supports Kanji/Kana to Romaji and Kanji to Kana conversion.
