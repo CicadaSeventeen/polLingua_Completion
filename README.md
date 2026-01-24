@@ -48,18 +48,19 @@ Requirements:
 ### Bash
 * **Regular Users**: Typically uses `bash-completion`. Supports both **Native (Recommended)** and **fzf** modes.
 * **ble.sh Users**: The above modes are unavailable; a dedicated `ble.sh` implementation is provided.
+   * **Notice**: `ble.sh` users should use `ble-import -C 'source /path/to/completer_ble.sh' core-complete` instead of normal source. 
 
 ### Zsh
 * Please use Zsh's `compsys` system.
 * In addition to `completer.zsh`, you need to load `setup.zsh` for an out-of-the-box experience. The latter contains necessary configurations which users are encouraged to modify as needed.
-* Please use `menu-complete` instead of `expand-or-complete` to avoid a known bug.
+* Please use **`menu-complete`** instead of `expand-or-complete` to avoid a known bug.
 
 ### Fish (Recommended)
 * **abbr_fzf.fish (Recommended)**: Implemented using Fish's `abbr` (abbreviation) error-correction system and relies on `fzf`. This is currently the best practice.
 * **abbr.fish**: Uses the `abbr` system without `fzf` dependency; provides basic support only.
-* **About abbr**: `abbr` does not use the Tab key for completion; it is semi-automatic.
-    * **Manual Trigger**: Type `@foo@` or `::foo::` and press **Space** to automatically trigger decoding. (Behavior can be modified in the Fish scripts).
-    * **Auto Trigger**: Type completable text and press **Space** to trigger decoding (Enabled by default for `abbr_fzf.fish`, disabled for `abbr.fish`).
+   * **About abbr**: `abbr` does not use the Tab key for completion; it is semi-automatic.
+      * **Manual Trigger**: Type `@foo@` or `::foo::` and press **Space** to automatically trigger decoding. (Behavior can be modified in the Fish scripts).
+      * **Auto Trigger**: Type completable text and press **Space** to trigger decoding (Enabled by default for `abbr_fzf.fish`, disabled for `abbr.fish`).
 * **completer_fzf.fish**: Use this version if you prefer traditional **Tab** completion (requires `fzf`).
 
 ---
