@@ -2,7 +2,7 @@ use std::sync::{ Mutex, OnceLock};
 //use serde::{Deserialize, Serialize};
 use mecab::Tagger;
 use std::collections::HashSet;
-use crate::env::path::get_tmpfile_jp_dict_path;
+use crate::get_env::path::get_tmpfile_jp_dict_path;
 
 struct GuardTagger(Tagger);
 unsafe impl Send for GuardTagger {}

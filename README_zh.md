@@ -48,6 +48,7 @@ v1版本使用 **Rust** 重写了核心逻辑，性能问题基本解决，并�
  ### Zsh
 * 请使用 Zsh 的 `compsys` 系统。
 * 除了 `completer.zsh` 外，若需开箱即用，同时需要加载`setup.zsh`。后者包含必要配置，建议用户根据需求自行修改。
+* 请使用`menu-complete`而不是`expand-or-complete`以防止已知bug。
 
 ### Fish (推荐)
 * **abbr_fzf.fish (推荐)**：依靠Fish的`abbr`纠错系统实现，依赖 `fzf`，这是目前的最佳实践。
@@ -120,6 +121,6 @@ filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode:filter(script=zh
 | **zh_hanzi** | 汉字转拼音 | `format`: (enum: **full**, first_letter, initials) <br>`capitalize`: (enum: **no**, all, first_letter, initials) <br>`heteronym`: (true/**false**) |输出的格式<br>是否输出为大写字母<br>多音字支持<br>别名**zh_hanzi_pinyin**|
 | **zh_hanzi_zhuyin** | 汉字转注音 | `heteronym`: (true/**false**)<br>`tone`: (true/**false**) |多音字支持<br>是否带有声调<br>初步支持|
 | **jp_all** | 日语转罗马字/假名 | `output`: (enum: **romaji**, ascii, kana)<br> `nbest`: (unsighed int, default as **1**) | 输出的格式（ascii比romaji更生硬）<br> 尝试的最佳匹配数（建议小于5）<br>别名**jp_kanji_and_kana**|
-| **ko_hangeul** | 韩语谚文转 ASCII/韩语字母 | `output`: (enum: **ascii**, jamo)<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | 计划添加首字母模式支持 |
+| **ko_hangeul** | 韩语谚文转 ASCII/韩语字母 | `output`: (enum: **ascii**, jamo)<br>`format`: (enum: **full**, first_letter, chosoeng<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | 类似汉语拼音 |
 
 ---

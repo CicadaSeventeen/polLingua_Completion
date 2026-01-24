@@ -52,6 +52,7 @@ Requirements:
 ### Zsh
 * Please use Zsh's `compsys` system.
 * In addition to `completer.zsh`, you need to load `setup.zsh` for an out-of-the-box experience. The latter contains necessary configurations which users are encouraged to modify as needed.
+* Please use `menu-complete` instead of `expand-or-complete` to avoid a known bug.
 
 ### Fish (Recommended)
 * **abbr_fzf.fish (Recommended)**: Implemented using Fish's `abbr` (abbreviation) error-correction system and relies on `fzf`. This is currently the best practice.
@@ -125,4 +126,4 @@ filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode:filter(script=zh
 | **zh_hanzi** | Hanzi to Pinyin | `format`: (enum: **full**, first_letter, initials) <br>`capitalize`: (enum: **no**, all, first_letter, initials) <br>`heteronym`: (true/**false**) | Alias: **zh_hanzi_pinyin** |
 | **zh_hanzi_zhuyin** | Hanzi to Zhuyin | `heteronym`: (true/**false**)<br>`tone`: (true/**false**) | *Initial support* |
 | **jp_all** | Japanese to Romaji/Kana | `output`: (enum: **romaji**, ascii, kana)<br> `nbest`: (unsigned int, **1**) | * Output format (ascii is more raw)<br>* Best matches count (suggest < 5)<br> Alias: **jp_kanji_and_kana** |
-| **ko_hangeul** | Hangul to ASCII/Jamo | `output`: (enum: **ascii**, jamo)<br>`capitalize`: (enum: **no**, all, choseong, first_letter) | Similar to Chinese <br>*Choseong (initial consonant) mode support planned* |
+| **ko_hangeul** | Hangul to ASCII/Jamo |`output`: (enum: **ascii**, jamo)<br>  `format`: (enum: **full**, first_letter, choseong) <br>`capitalize`: (enum: **no**, all, choseong, first_letter) | Similar to Chinese Pinyin converter |

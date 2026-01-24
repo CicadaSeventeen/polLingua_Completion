@@ -200,12 +200,12 @@ fn get_config_list() -> Vec<Vec<String>> {
         }
     };
 
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE", "true", "POLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE", "filter(script=zh,mode=include),zh_hanzi(heteronym=true),unicode");
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE", "true", "POLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE", "filter(script=jp,mode=include),jp_all(nbest=5),filter(script=hanzi,mode=no),unicode");
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN", "true", "POLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN", "filter(script=ko,mode=include),ko_hangeul,filter(script=hanzi,mode=no),unicode");
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER", "true", "POLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER", "filter(script=unicode,mode=include),filter(script=cjk,mode=no),unicode");
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII", "false", "POLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII", "filter(script=ascii,mode=only)");
-    append_env("POLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY", "true", "POLINGUA_COMPLETION_CONVERTER_CONFIG_IDENTITY", "identity");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_CHINESE", "true", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_CHINESE", "filter(script=zh,mode=include),zh_hanzi(heteronym=true),filter(script=cjk,mode=no),unicode:filter(script=zh,mode=include),zh_hanzi(heteronym=true,format=first_letter),filter(script=cjk,mode=no),unicode:filter(script=zh,mode=include),zh_hanzi(heteronym=true,format=initials),filter(script=cjk,mode=no),unicode");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_JAPANESE", "true", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_JAPANESE", "filter(script=jp,mode=include),jp_all(nbest=5),filter(script=cjk,mode=no),unicode");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_KOREAN", "true", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_KOREAN", "filter(script=ko,mode=include),ko_hangeul,filter(script=cjk,mode=no),unicode:filter(script=ko,mode=include),ko_hangeul(format=first_letter),filter(script=cjk,mode=no),unicode::filter(script=ko,mode=include),ko_hangeul(format=choseong),filter(script=cjk,mode=no),unicode");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_UNICODE_OTHER", "true", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_UNICODE_OTHER", "filter(script=unicode,mode=include),filter(script=cjk,mode=no),unicode");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_ASCII", "false", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_ASCII", "filter(script=ascii,mode=only)");
+    append_env("POLLINGUA_COMPLETION_CONVERTER_ENABLE_IDENTITY", "true", "POLLINGUA_COMPLETION_CONVERTER_CONFIG_IDENTITY", "identity");
 
     // 处理连续冒号
     let re_colons = Regex::new(r":+").unwrap();
@@ -213,7 +213,7 @@ fn get_config_list() -> Vec<Vec<String>> {
     let tmp_final = if tmp_cleaned == ":" { "" } else { &tmp_cleaned };
 
     // 最终的环境变量覆盖
-    let final_config_str = env::var("POLINGUA_COMPLETION_CONVERTER_CONFIG")
+    let final_config_str = env::var("POLLINGUA_COMPLETION_CONVERTER_CONFIG")
         .unwrap_or_else(|_| tmp_final.to_string());
 
     let final_config_str = final_config_str.trim();

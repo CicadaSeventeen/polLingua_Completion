@@ -13,9 +13,6 @@ end
 
 function __pollingua_abbr_everywhere
 	set -l name $argv[1]
-	# TODO: 区分文件和目录，如cd等
-	#set -l all_token (commandline --tokenize)
-	#echo $all_token[-2]
 	set -l output (pollingua-completion-core "$name" "$PWD"  |  string trim)
 	if test -z $output[1]
 		return 1

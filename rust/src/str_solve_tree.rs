@@ -106,6 +106,7 @@ impl StrSolveTree {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn get_completion(&self, str_list: &[String], execmode: ExecMode, input: &str) -> Vec<String>
 	{
 		let ret_map = self.exec(str_list, execmode);
@@ -116,6 +117,18 @@ impl StrSolveTree {
 			}
 		}
 		return ret_list;
+	}
+
+	#[allow(dead_code)]
+	pub fn get_completion_foo(&self, str_list: &[String], execmode: ExecMode, _input: &str) -> Vec<String>
+	{
+		let ret_map = self.exec(str_list, execmode);
+		for ( _source, list ) in ret_map.iter() {
+//			if list.into_iter().any(|s| s.starts_with(input)) {
+			println!("{:?}",list)
+//			}
+		}
+		return vec![];
 	}
 
 	pub fn from_json_str(json_str: &str) -> Result<StrSolveTree,serde_json::Error>

@@ -1,6 +1,6 @@
 [package]
-name = "enum_rust"
-version = "0.1.0"
+name = "pollingua-completion-core"
+version = "0.99.1"
 edition = "2024"
 
 [dependencies]
@@ -12,6 +12,7 @@ hangeul = "0.4.0"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 mecab = "0.1.6"
+mimalloc = "0.1.48"
 pinyin = "0.11.0"
 pinyin_zhuyin = "0.2.0"
 rayon = "1.11.0"
@@ -23,3 +24,9 @@ unicode-blocks = "0.1.9"
 unidecode = "0.3.0"
 wana_kana = "4.0.0"
 
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

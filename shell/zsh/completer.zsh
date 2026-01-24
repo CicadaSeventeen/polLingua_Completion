@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+[ -z ${POLLINGUA_COMPLETION_CMD_DIR_ONLY} ] && POLLINGUA_COMPLETION_CMD_DIR_ONLY=(cd pushd  rmdir chroot)
 local _polLingua_cmd=(pollingua-completion-core)
 zstyle -e ':pollingua-completion:settings'  enable-internal-completers '[[ -z $reply ]] && reply=(_list)'
 #zstyle -e ':pollingua-completion:settings'  enable-fzf '[[ -z $reply ]] && reply=false'
@@ -14,6 +15,12 @@ _polingua() {
 	# 这里我们手动处理一部分，为了传给 Python 正确的上下文。
 
 	local cur_word="$words[CURRENT]"
+	local last_word="$words[CURRENT-1]"
+	cmd_mode=all
+	if [[ ${POLLINGUA_COMPLETION_CMD_DIR_ONLY[(r)$last_word]} == $last_word ]]
+	then
+		cmd_mode=dir
+	fi
 	local dir_prefix="${cur_word:h}"
 	local base_name="${cur_word:t}"
 
@@ -33,25 +40,16 @@ _polingua() {
 		eval "expand_dir=$dir_prefix"
 	fi
 
-	# 4. 调用 Python 获取候选项
 	# 你的 Python 脚本应该接收: "当前正在输入的词(base_name)" "所在的目录(expand_dir)"
 	# 并返回：该目录下的文件名（不带路径前缀！）
-	# 优化：仅当目录存在时才调用
 	zstyle -a ':pollingua-completion:settings' enable-internal-completers enable_internal_completers
 	#zstyle -a ':pollingua-completion:settings' enable-fzf enable_fzf
 	if [[ -d "$expand_dir" && -n "$base_name" ]]; then
-		#if [[ $enable_fzf == false || $enable_fzf == no || $enable_fzf == 0 ]]
-		#then
-		compadd -f -U $(${_polLingua_cmd} "${base_name}" "${expand_dir}")
-		#else
-		#	local polingua_out=$(${_polLingua_cmd} "${base_name}" "${expand_dir}")
-		#	if [[ ! -z "${polingua_out// /}" ]]; then
-		#		compadd -f -U $(echo $polingua_out | fzf)
-		#	fi
-		#fi
+		_pollingua_ret=($(_POLINGUA_COMPLETION_FILETYPE=$cmd_mode ${_polLingua_cmd} "${base_name}" "${expand_dir}"))
+		compadd -f -U -Q -a _pollingua_ret
 		for item in $enable_internal_completers
 		do
-			eval $item
+			$item
 		done
 	fi
 	return ret
