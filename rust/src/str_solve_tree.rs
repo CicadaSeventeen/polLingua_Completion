@@ -3,6 +3,7 @@ use serde_aux::prelude::*;
 use rayon::prelude::*;
 use std::collections::HashSet;
 use std::collections::HashMap;
+//use crate::get_env::func_bytes::*;
 
 use crate::str_solve_func::*;
 
@@ -139,6 +140,7 @@ impl StrSolveTree {
 				let tree = StrSolveTree {
 					root: root_node,
 					};
+				//tree.save_bincode();
 				Ok(tree)
 			},
 			Err(e) => {
@@ -146,5 +148,21 @@ impl StrSolveTree {
 			}
 		}
 	}
+
+/*
+	pub fn from_bincode() -> Result<StrSolveTree, Box<dyn Error>>
+	{
+		let bytes = read_tmpfile_func_bytes()?;
+		let root_node: TreeNode = postcard::from_bytes(&bytes)?;
+		Ok(StrSolveTree {
+			root: root_node
+		})
+	}
+
+	pub fn save_bincode(&self){
+		let bytes = postcard::to_stdvec(&self.root).unwrap();
+		let _ = mk_tmpfile_func_bytes(bytes);
+	}
+*/
 }
 

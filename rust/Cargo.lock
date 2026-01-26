@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "pollingua-completion-core"
-version = "0.99.1"
+version = "0.99.3"
 dependencies = [
  "any_ascii",
  "deunicode",
